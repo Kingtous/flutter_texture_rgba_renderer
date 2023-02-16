@@ -3,6 +3,7 @@
 A texture helper which brings a high level api to handle RGBA data.
 
 ![Pub Version](https://img.shields.io/pub/v/flutter_texture_rgba_renderer)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer?ref=badge_shield)
 
 ## Platform Support
 
@@ -79,3 +80,6 @@ class TextureRgbaRenderer {
 
 - [Flutter](https://github.com/flutter/flutter)
 - [Dart VLC](https://github.com/alexmercerind/dart_vlc) 
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer?ref=badge_large)
