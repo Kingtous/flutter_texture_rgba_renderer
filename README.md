@@ -2,6 +2,8 @@
 
 A texture helper which brings a high level api to handle RGBA data.
 
+![Pub Version](https://img.shields.io/pub/v/flutter_texture_rgba_renderer)
+
 ## Platform Support
 
 - [x] Linux

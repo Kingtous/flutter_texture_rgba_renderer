@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:texture_rgba_renderer/texture_rgba_renderer_method_channel.dart';
+import 'package:flutter_texture_rgba_renderer/texture_rgba_renderer_method_channel.dart';
 
 void main() {
   MethodChannelTextureRgbaRenderer platform =

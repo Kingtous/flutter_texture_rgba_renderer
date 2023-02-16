@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:texture_rgba_renderer/texture_rgba_renderer.dart';
+import 'package:flutter_texture_rgba_renderer/texture_rgba_renderer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> {
             Align(
               alignment: Alignment.bottomCenter,
               child: IconButton(
-                icon: Icon(Icons.play_arrow),
+                icon: const Icon(Icons.play_arrow),
                 onPressed: start,
               ),
             )
