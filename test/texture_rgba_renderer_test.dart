@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_texture_rgba_renderer/texture_rgba_renderer_platform_interface.dart';
-import 'package:flutter_texture_rgba_renderer/texture_rgba_renderer_method_channel.dart';
+import 'package:texture_rgba_renderer/texture_rgba_renderer_platform_interface.dart';
+import 'package:texture_rgba_renderer/texture_rgba_renderer_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockTextureRgbaRendererPlatform
