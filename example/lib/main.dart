@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_texture_rgba_renderer/texture_rgba_renderer.dart';
+import 'package:texture_rgba_renderer/texture_rgba_renderer.dart';
 
 void main() {
   runApp(const MyApp());

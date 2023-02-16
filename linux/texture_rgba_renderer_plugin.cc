@@ -41,15 +41,14 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     if (g_renderer_map.find(key) != g_renderer_map.end()) {
       response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_int(-1)));
     } else {
-      auto texture_rgba = texture_rgba_new();
-      auto texture_rgba_private = (TextureRgbaPrivate*) texture_rgba_get_instance_private(texture_rgba);
-      texture_rgba_private->texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
-      FL_PIXEL_BUFFER_TEXTURE_GET_CLASS(texture_rgba)->copy_pixels =
-          texture_rgba_copy_pixels;
+      g_autoptr(TextureRgba) texture_rgba = texture_rgba_new();
+      auto texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
+      FL_TEXTURE_GL_GET_CLASS(texture_rgba)->populate =
+          texture_rgba_populate;
       g_renderer_map[key] = texture_rgba;
-      // register to 
+      // Register to the registrar.
       fl_texture_registrar_register_texture(self->texture_registrar, FL_TEXTURE(texture_rgba));
-      response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_int(texture_rgba_private->texture_id)));
+      response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_int(texture_id)));
     }
   } else if (strcmp(method, "closeTexture") == 0) {
     auto args = fl_method_call_get_args(method_call);

@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_texture_rgba_renderer
+  texture_rgba_renderer
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
