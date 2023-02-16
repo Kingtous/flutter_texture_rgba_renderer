@@ -1,7 +1,7 @@
-name: texture_rgba_renderer
+name: flutter_texture_rgba_renderer
 description: A texture helper which brings a high level api to handle RGBA data.
 version: 0.0.1
-homepage: https://github.com/Kingtous/texture_rgba_renderer
+homepage: https://github.com/Kingtous/flutter_texture_rgba_renderer
 
 environment:
   sdk: '>=2.19.2 <3.0.0'
