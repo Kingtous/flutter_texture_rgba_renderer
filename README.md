@@ -7,8 +7,18 @@ A texture helper which brings a high level api to handle RGBA data. No frame cop
 
 ## Platform Support
 
+The plugin aims to provide opengl impl for the texture, which bring a better performance instead of `FFI` + `CustomPainter`.
+
 - [x] Linux
-- [x] Windows (No gpu acceleration yet, copy required currently.)
+- [x] Windows (No gpu acceleration yet due to the limitation of Flutter.)
+
+```c++
+// The available texture variants.
+// Only PixelBufferTexture is currently implemented.
+// Other variants are expected to be added in the future.
+typedef std::variant<PixelBufferTexture, GpuSurfaceTexture> TextureVariant;
+```
+
 - [ ] MacOS (not implemented yet.)
 
 ## Getting Started
