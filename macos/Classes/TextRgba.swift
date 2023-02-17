@@ -27,24 +27,24 @@ public final class TextRgba: NSObject, FlutterTexture {
         if (data == nil) {
             return nil
         }
-        return Unmanaged.passUnretained(data!)
+        return Unmanaged.passRetained(data!)
     }
     
     public func markFrameAvaliable(data: Data, width: Int, height: Int) -> Bool {
         self.data = data.withUnsafeBytes { buffer in
-            var pixelBufferCopy: CVPixelBuffer? = nil
-            CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32RGBA, nil, &pixelBufferCopy)
-            if (pixelBufferCopy == nil) {
+            var pixelBufferCopy: CVPixelBuffer!
+            let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, nil, &pixelBufferCopy)
+            guard result == kCVReturnSuccess else {
                 return nil
             }
-            CVPixelBufferLockBaseAddress(pixelBufferCopy!, [])
-            defer {CVPixelBufferUnlockBaseAddress(pixelBufferCopy!, [])}
+            CVPixelBufferLockBaseAddress(pixelBufferCopy, [])
+            defer {CVPixelBufferUnlockBaseAddress(pixelBufferCopy, [])}
             var source = buffer.baseAddress!
             
-            for plane in 0 ..< CVPixelBufferGetPlaneCount(pixelBufferCopy!) {
-                let dest = CVPixelBufferGetBaseAddressOfPlane(pixelBufferCopy!, plane)
-                let height = CVPixelBufferGetHeightOfPlane(pixelBufferCopy!, plane)
-                let bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBufferCopy!, plane)
+            for plane in 0 ..< CVPixelBufferGetPlaneCount(pixelBufferCopy) {
+                let dest = CVPixelBufferGetBaseAddressOfPlane(pixelBufferCopy, plane)
+                let height = CVPixelBufferGetHeightOfPlane(pixelBufferCopy, plane)
+                let bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBufferCopy, plane)
                 let planceSize = height * bytesPerRow
                 memcpy(dest, source, planceSize)
                 source += planceSize

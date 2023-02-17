@@ -35,7 +35,9 @@ public class TextureRgbaRendererPlugin: NSObject, FlutterPlugin {
         let args = call.arguments as! Dictionary<String, Any?>
         let key = args["key"] as! Int64
         if (renderer[key] != nil) {
-            texture_registry?.unregisterTexture(renderer[key]?.textureId ?? -1)
+            if (-1 != renderer[key]?.textureId) {
+                texture_registry?.unregisterTexture(renderer[key]?.textureId ?? -1)
+            }
             result(true)
         } else {
             result(false)
@@ -44,14 +46,14 @@ public class TextureRgbaRendererPlugin: NSObject, FlutterPlugin {
     case "onRgba":
         let args = call.arguments as! Dictionary<String, Any?>
         let key = args["key"] as! Int64
-        let data = args["data"] as! Data
+        let data = args["data"] as! FlutterStandardTypedData
         let height = args["height"] as! Int
         let width = args["height"] as! Int
         let textureRgba = renderer[key]
         if (textureRgba == nil) {
             result(false)
         } else {
-            result(textureRgba!.markFrameAvaliable(data: data, width: width, height: height))
+            result(textureRgba!.markFrameAvaliable(data: data.data, width: width, height: height))
         }
     default:
       result(FlutterMethodNotImplemented)
