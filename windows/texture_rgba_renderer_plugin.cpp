@@ -24,6 +24,7 @@ void TextureRgbaRendererPlugin::RegisterWithRegistrar(
           &flutter::StandardMethodCodec::GetInstance());
 
   auto plugin = std::make_unique<TextureRgbaRendererPlugin>();
+  plugin->texture_registrar = registrar->texture_registrar();
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -40,17 +41,9 @@ TextureRgbaRendererPlugin::~TextureRgbaRendererPlugin() {}
 void TextureRgbaRendererPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
-    std::ostringstream version_stream;
-    version_stream << "Windows ";
-    if (IsWindows10OrGreater()) {
-      version_stream << "10+";
-    } else if (IsWindows8OrGreater()) {
-      version_stream << "8";
-    } else if (IsWindows7OrGreater()) {
-      version_stream << "7";
-    }
-    result->Success(flutter::EncodableValue(version_stream.str()));
+  if (method_call.method_name().compare("createTexture") == 0) {
+     auto args = std::get<flutter::EncodableMap*>(method_call.arguments());
+     arg
   } else {
     result->NotImplemented();
   }

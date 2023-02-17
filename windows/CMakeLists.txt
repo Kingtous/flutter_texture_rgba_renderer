@@ -15,6 +15,8 @@ set(PLUGIN_NAME "texture_rgba_renderer_plugin")
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
   "texture_rgba_renderer_plugin.cpp"
+  "texture_rgba.cpp"
+  "texture_rgba.h"
   "texture_rgba_renderer_plugin.h"
 )
 
