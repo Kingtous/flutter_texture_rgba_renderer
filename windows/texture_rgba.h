@@ -8,9 +8,11 @@ public:
 	TextureRgba(flutter::TextureRegistrar* texture_registrar);
 	~TextureRgba();
 
-	void MarkVideoFrameAvailable(uint8_t* buffer, int32_t width, int32_t height);
+	void MarkVideoFrameAvailable(const std::vector<uint8_t>& buffer, size_t width, size_t height);
 
 	int64_t texture_id() const { return texture_id_; };
+
+	const FlutterDesktopPixelBuffer* buffer();
 
 private:
 	FlutterDesktopPixelBuffer flutter_pixel_buffer_{};
@@ -18,5 +20,6 @@ private:
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
 	int64_t texture_id_;
 	mutable std::mutex mutex_;
+	std::vector<uint8_t> buffer_tmp_;
 };
 

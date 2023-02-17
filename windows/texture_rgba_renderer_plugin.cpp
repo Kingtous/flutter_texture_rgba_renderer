@@ -34,7 +34,9 @@ void TextureRgbaRendererPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-TextureRgbaRendererPlugin::TextureRgbaRendererPlugin() {}
+TextureRgbaRendererPlugin::TextureRgbaRendererPlugin() {
+    this->texture_registrar = nullptr;
+}
 
 TextureRgbaRendererPlugin::~TextureRgbaRendererPlugin() {}
 
@@ -42,9 +44,42 @@ void TextureRgbaRendererPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("createTexture") == 0) {
-     auto args = std::get<flutter::EncodableMap*>(method_call.arguments());
-     arg
-  } else {
+     auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+     auto key = std::get<int>(args.at(flutter::EncodableValue("key")));
+     auto [it, add] = textures_.try_emplace(key, nullptr);
+     if (add) {
+         // Create a texture.
+         it->second = std::make_unique<TextureRgba>(this->texture_registrar);
+         result->Success(flutter::EncodableValue(it->second->texture_id()));
+     }
+  }
+  else if (method_call.method_name().compare("closeTexture") == 0) {
+      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+      auto key = std::get<int>(args.at(flutter::EncodableValue("key")));
+      if (textures_.find(key) == textures_.end()) {
+          result->Success(flutter::EncodableValue(false));
+      }
+      else {
+          this->texture_registrar->UnregisterTexture(textures_[key]->texture_id());
+          textures_.erase(key);
+          result->Success(flutter::EncodableValue(true));
+      }
+  }
+  else if (method_call.method_name().compare("onRgba") == 0) {
+      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+      auto key = std::get<int>(args.at(flutter::EncodableValue("key")));
+      if (textures_.find(key) == textures_.end()) {
+          result->Success(flutter::EncodableValue(false));
+      }
+      else {
+          auto& data = std::get<std::vector<uint8_t>>(args.at(flutter::EncodableValue("data")));
+          auto height = std::get<int>(args.at(flutter::EncodableValue("height")));
+          auto width = std::get<int>(args.at(flutter::EncodableValue("width")));
+          textures_[key]->MarkVideoFrameAvailable(data, width, height);
+          result->Success(flutter::EncodableValue(true));
+      }
+  } 
+  else {
     result->NotImplemented();
   }
 }

@@ -30,7 +30,7 @@ class TextureRgbaRendererPlugin : public flutter::Plugin {
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-  std::unordered_map<uint64_t, std::unique_ptr<TextureRgba>> textures_;
+  std::unordered_map<int64_t, std::unique_ptr<TextureRgba>> textures_;
 };
 
 }  // namespace texture_rgba_renderer

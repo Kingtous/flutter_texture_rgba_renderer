@@ -4,7 +4,7 @@ version: 0.0.2
 homepage: https://github.com/Kingtous/flutter_texture_rgba_renderer
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: '>=2.15.0 <3.0.0'
   flutter: ">=2.5.0"
 
 dependencies:

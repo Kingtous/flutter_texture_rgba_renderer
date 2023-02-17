@@ -8,7 +8,7 @@ A texture helper which brings a high level api to handle RGBA data. No frame cop
 ## Platform Support
 
 - [x] Linux
-- [ ] Windows (not implemented yet.)
+- [x] Windows (No gpu acceleration yet, copy required currently.)
 - [ ] MacOS (not implemented yet.)
 
 ## Getting Started
