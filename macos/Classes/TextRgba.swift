@@ -33,6 +33,7 @@ public final class TextRgba: NSObject, FlutterTexture {
     public func markFrameAvaliable(data: Data, width: Int, height: Int) -> Bool {
         self.data = data.withUnsafeBytes { buffer in
             var pixelBufferCopy: CVPixelBuffer!
+            // macOS only support 32BGRA currently.
             let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, nil, &pixelBufferCopy)
             guard result == kCVReturnSuccess else {
                 return nil
@@ -53,7 +54,7 @@ public final class TextRgba: NSObject, FlutterTexture {
         }
         self.width = width
         self.height = height
-        if (textureId != -1) {
+        if (textureId != -1 && self.data != nil) {
             registry?.textureFrameAvailable(textureId)
             return true
         } else {
