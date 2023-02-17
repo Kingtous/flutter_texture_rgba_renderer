@@ -20,6 +20,6 @@ private:
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
 	int64_t texture_id_;
 	mutable std::mutex mutex_;
-	std::vector<uint8_t> buffer_tmp_;
+	// std::vector<uint8_t> buffer_tmp_;
 };
 
