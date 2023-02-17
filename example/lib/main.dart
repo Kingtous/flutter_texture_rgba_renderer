@@ -65,7 +65,7 @@ class _MyAppState extends State<MyApp> {
 
   Uint8List mockPicture(int width, int height) {
     final pic = List.generate(width * height * 4, (index) {
-      return (index + 1) % 4 == 0 ? 1 : random.nextInt(255);
+      return random.nextInt(255);
     });
     return Uint8List.fromList(pic);
   }

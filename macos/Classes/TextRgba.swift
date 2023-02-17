@@ -34,22 +34,19 @@ public final class TextRgba: NSObject, FlutterTexture {
         self.data = data.withUnsafeBytes { buffer in
             var pixelBufferCopy: CVPixelBuffer!
             // macOS only support 32BGRA currently.
-            let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, nil, &pixelBufferCopy)
+            let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, [
+                kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferMetalCompatibilityKey: true,
+                kCVPixelBufferOpenGLCompatibilityKey: true
+            ] as CFDictionary, &pixelBufferCopy)
             guard result == kCVReturnSuccess else {
                 return nil
             }
             CVPixelBufferLockBaseAddress(pixelBufferCopy, [])
-            defer {CVPixelBufferUnlockBaseAddress(pixelBufferCopy, [])}
-            var source = buffer.baseAddress!
-            
-            for plane in 0 ..< CVPixelBufferGetPlaneCount(pixelBufferCopy) {
-                let dest = CVPixelBufferGetBaseAddressOfPlane(pixelBufferCopy, plane)
-                let height = CVPixelBufferGetHeightOfPlane(pixelBufferCopy, plane)
-                let bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBufferCopy, plane)
-                let planceSize = height * bytesPerRow
-                memcpy(dest, source, planceSize)
-                source += planceSize
-            }
+            let source = buffer.baseAddress!
+            let ptr = CVPixelBufferGetBaseAddress(pixelBufferCopy!)!
+            memcpy(ptr, source, data.count)
+            CVPixelBufferUnlockBaseAddress(pixelBufferCopy, [])
             return pixelBufferCopy
         }
         self.width = width
