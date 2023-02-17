@@ -21,6 +21,8 @@ typedef std::variant<PixelBufferTexture, GpuSurfaceTexture> TextureVariant;
 
 - [x] MacOS
 
+Note: due to the limitation of supported formats for `CVPixelBuffer`, please use the `BGRA` format instead.
+
 ## Getting Started
 
 ### Create a texture by calling `createTexture`.
