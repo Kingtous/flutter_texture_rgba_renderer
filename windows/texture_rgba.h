@@ -8,7 +8,9 @@ public:
 	TextureRgba(flutter::TextureRegistrar* texture_registrar);
 	~TextureRgba();
 
-	void MarkVideoFrameAvailable(const std::vector<uint8_t>& buffer, size_t width, size_t height);
+	void MarkVideoFrameAvailable(std::vector<uint8_t>& buffer, size_t width, size_t height);
+
+	void MarkVideoFrameAvailablePtr(const uint8_t* buffer, size_t width, size_t height);
 
 	int64_t texture_id() const { return texture_id_; };
 

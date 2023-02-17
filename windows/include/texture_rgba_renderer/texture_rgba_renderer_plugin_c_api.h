@@ -16,6 +16,8 @@ extern "C" {
 FLUTTER_PLUGIN_EXPORT void TextureRgbaRendererPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
+FLUTTER_PLUGIN_EXPORT void FlutterRgbaRendererPluginOnRgba(void* texture_rgba, const uint8_t* buffer, int width, int height);
+
 #if defined(__cplusplus)
 }  // extern "C"
 #endif

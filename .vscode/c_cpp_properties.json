@@ -20,7 +20,7 @@
                 "/usr/include/libmount",
                 "/usr/include/blkid",
                 "/usr/include/pixman-1",
-                "/usr/include/atk-1.0"
+                "/usr/include/atk-1.0",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

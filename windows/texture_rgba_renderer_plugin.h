@@ -24,13 +24,13 @@ class TextureRgbaRendererPlugin : public flutter::Plugin {
   TextureRgbaRendererPlugin& operator=(const TextureRgbaRendererPlugin&) = delete;
 
   flutter::TextureRegistrar* texture_registrar;
+  std::unordered_map<int64_t, std::unique_ptr<TextureRgba>> textures_;
 
  private:
   // Called when a method is called on this plugin's channel from Dart.
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-  std::unordered_map<int64_t, std::unique_ptr<TextureRgba>> textures_;
 };
 
 }  // namespace texture_rgba_renderer

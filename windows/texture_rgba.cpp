@@ -16,13 +16,22 @@ TextureRgba::~TextureRgba()
 	texture_registrar_->UnregisterTexture(texture_id_);
 }
 
-void TextureRgba::MarkVideoFrameAvailable(const std::vector<uint8_t>& buffer, size_t width, size_t height)
-{
+void TextureRgba::MarkVideoFrameAvailable(
+    std::vector<uint8_t>& buffer, size_t width, size_t height) {
+        const std::lock_guard<std::mutex> lock(mutex_);
+	// FIXME: remove copy.
+	std::swap(buffer, buffer_tmp_);
+	flutter_pixel_buffer_.buffer = &buffer_tmp_[0];
+	flutter_pixel_buffer_.width = width;
+	flutter_pixel_buffer_.height = height;
+	texture_registrar_->MarkTextureFrameAvailable(texture_id_);
+}
+
+void TextureRgba::MarkVideoFrameAvailablePtr(
+	const uint8_t* buffer, size_t width, size_t height) {
 	const std::lock_guard<std::mutex> lock(mutex_);
 	// FIXME: remove copy.
-	buffer_tmp_.resize(buffer.size());
-	std::copy(buffer.begin(), buffer.end(), buffer_tmp_.begin());
-	flutter_pixel_buffer_.buffer = &buffer_tmp_[0];
+	flutter_pixel_buffer_.buffer = buffer;
 	flutter_pixel_buffer_.width = width;
 	flutter_pixel_buffer_.height = height;
 	texture_registrar_->MarkTextureFrameAvailable(texture_id_);

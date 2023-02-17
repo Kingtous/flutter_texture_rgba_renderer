@@ -79,9 +79,22 @@ void TextureRgbaRendererPlugin::HandleMethodCall(
           result->Success(flutter::EncodableValue(true));
       }
   } 
+  else if (method_call.method_name().compare("getTexturePtr") == 0) {
+      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+      auto key = std::get<int>(args.at(flutter::EncodableValue("key")));
+      if (textures_.find(key) == textures_.end()) {
+          result->Success(flutter::EncodableValue(-1));
+      }
+      else {
+          // Return an address.
+          void* rgba = (void*) textures_[key].get();
+          result->Success(flutter::EncodableValue(rgba));
+      }
+  }
   else {
     result->NotImplemented();
   }
 }
 
 }  // namespace texture_rgba_renderer
+
