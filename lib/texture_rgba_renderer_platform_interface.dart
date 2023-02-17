@@ -42,4 +42,8 @@ abstract class TextureRgbaRendererPlatform extends PlatformInterface {
   Future<bool> onRgba(int key, Uint8List data, int height, int width) {
     throw UnimplementedError('onRgba() has not been implemented.');
   }
+
+  Future<int> getTexturePtr(int key) {
+    throw UnimplementedError('onRgba() has not been implemented.');
+  }
 }

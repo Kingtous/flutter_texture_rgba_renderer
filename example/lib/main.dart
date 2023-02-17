@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> {
   int width = 500;
   int cnt = 0;
   var key = 0;
+  int texturePtr = 0;
   final random = Random();
   Uint8List? data;
 
@@ -34,6 +35,11 @@ class _MyAppState extends State<MyApp> {
     _textureRgbaRendererPlugin.createTexture(key).then((textureId) {
       if (textureId != -1) {
         debugPrint("Texture register success, textureId=$textureId");
+        _textureRgbaRendererPlugin.getTexturePtr(key).then((value) {
+          setState(() {
+            texturePtr = value;
+          });
+        });
         setState(() {
           this.textureId = textureId;
         });
@@ -91,7 +97,8 @@ class _MyAppState extends State<MyApp> {
                   ),
             Align(
               alignment: Alignment.topLeft,
-              child: Text("texture id: $textureId"),
+              child: Text(
+                  "texture id: $textureId, texture memory address: $texturePtr"),
             ),
             Align(
               alignment: Alignment.bottomCenter,

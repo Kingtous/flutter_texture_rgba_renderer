@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -32,9 +34,20 @@ class MethodChannelTextureRgbaRenderer extends TextureRgbaRendererPlatform {
 
   @override
   Future<bool> onRgba(int key, Uint8List data, int height, int width) async {
-    assert(data.length == height * width * 4);
     return await methodChannel.invokeMethod<bool>('onRgba',
             {"data": data, "height": height, "width": width, "key": key}) ??
         false;
+  }
+
+  @override
+  Future<int> getTexturePtr(int key) async {
+    // TODO: currently only supports Windows.
+    if (!Platform.isWindows) {
+      return -1;
+    }
+    final ptr =
+        await methodChannel.invokeMethod('getTexturePtr', {"key": key}) ??
+            false;
+    return ptr;
   }
 }

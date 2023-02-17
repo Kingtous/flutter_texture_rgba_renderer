@@ -87,8 +87,8 @@ void TextureRgbaRendererPlugin::HandleMethodCall(
       }
       else {
           // Return an address.
-          void* rgba = (void*) textures_[key].get();
-          result->Success(flutter::EncodableValue(rgba));
+          size_t rgba = reinterpret_cast<size_t>((void*) textures_[key].get());
+          result->Success(flutter::EncodableValue(int64_t(rgba)));
       }
   }
   else {

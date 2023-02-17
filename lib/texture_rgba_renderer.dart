@@ -25,4 +25,8 @@ class TextureRgbaRenderer {
     return TextureRgbaRendererPlatform.instance
         .onRgba(key, data, height, width);
   }
+
+  Future<int> getTexturePtr(int key) {
+    return TextureRgbaRendererPlatform.instance.getTexturePtr(key);
+  }
 }
