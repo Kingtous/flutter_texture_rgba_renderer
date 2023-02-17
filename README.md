@@ -19,7 +19,7 @@ The plugin aims to provide opengl impl for the texture, which bring a better per
 typedef std::variant<PixelBufferTexture, GpuSurfaceTexture> TextureVariant;
 ```
 
-- [ ] MacOS (not implemented yet.)
+- [x] MacOS
 
 ## Getting Started
 
