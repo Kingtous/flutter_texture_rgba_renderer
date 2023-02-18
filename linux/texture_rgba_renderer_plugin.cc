@@ -82,6 +82,9 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     auto texture_rgba = (*self->g_renderer_map)[key];
     auto texture_rgba_private = (TextureRgbaPrivate *)texture_rgba_get_instance_private((*self->g_renderer_map)[key]);
     g_mutex_lock(&texture_rgba_private->mutex);
+    if (texture_rgba_private->buffer != nullptr) {
+      delete[] texture_rgba_private->buffer;
+    } 
     texture_rgba_private->buffer = buffer;
     texture_rgba_private->video_height = height;
     texture_rgba_private->video_width = width;
