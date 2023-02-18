@@ -14,5 +14,6 @@ void TextureRgbaRendererPluginCApiRegisterWithRegistrar(
 
 void FlutterRgbaRendererPluginOnRgba(void* texture_rgba, const uint8_t* buffer, int width, int height) {
     TextureRgba* rgba = static_cast<TextureRgba*>(texture_rgba);
-    rgba->MarkVideoFrameAvailablePtr(buffer, width, height);
+    std::vector<uint8_t> data(buffer, buffer + width * height * 4);
+    rgba->MarkVideoFrameAvailable(data, width, height);
 }

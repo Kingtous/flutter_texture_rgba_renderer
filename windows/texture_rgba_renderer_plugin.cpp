@@ -80,14 +80,18 @@ void TextureRgbaRendererPlugin::HandleMethodCall(
       }
   } 
   else if (method_call.method_name().compare("getTexturePtr") == 0) {
+    std::cout << "REMOVE ME ==================== getTexturePtr 111" << std::endl;
       auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
       auto key = std::get<int>(args.at(flutter::EncodableValue("key")));
+      std::cout << "REMOVE ME ==================== getTexturePtr 222 key " << key << std::endl;
       if (textures_.find(key) == textures_.end()) {
+        std::cout << "REMOVE ME ==================== getTexturePtr 333" << std::endl;
           result->Success(flutter::EncodableValue(-1));
       }
       else {
           // Return an address.
           size_t rgba = reinterpret_cast<size_t>((void*) textures_[key].get());
+          std::cout << "REMOVE ME ==================== getTexturePtr 444" << std::endl;
           result->Success(flutter::EncodableValue(int64_t(rgba)));
       }
   }
