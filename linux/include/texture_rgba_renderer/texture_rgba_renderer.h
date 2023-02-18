@@ -14,10 +14,13 @@ struct _TextureRgbaClass
 
 struct TextureRgbaPrivate
 {
+  FlTextureRegistrar* texture_registrar = nullptr;
   GLuint texture_id = 0;
-  uint8_t *buffer = nullptr;
+  const uint8_t *buffer = nullptr;
+  size_t buffer_length = 0;
   int32_t video_width = 0;
   int32_t video_height = 0;
+  GMutex mutex;
 };
 
 /// Constructor.
@@ -36,6 +39,7 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
 {
   TextureRgbaPrivate *self = (TextureRgbaPrivate *)
       texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+  g_mutex_lock(&self->mutex);
   if (self->texture_id == 0)
   {
     glGenTextures(1, &self->texture_id);
@@ -50,6 +54,7 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
   // Note that Flutter only accepts textures in GL_RGBA8 format.
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width, self->video_height, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, self->buffer);
+  g_mutex_unlock(&self->mutex);
 
   *target = GL_TEXTURE_2D;
   *name = self->texture_id;
@@ -59,9 +64,12 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
   return TRUE;
 }
 
-static TextureRgba *texture_rgba_new()
+static TextureRgba *texture_rgba_new(FlTextureRegistrar* registrar)
 {
-  return TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(g_object_new(texture_rgba_get_type(), nullptr));
+  auto texture = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(g_object_new(texture_rgba_get_type(), nullptr));
+  ((TextureRgbaPrivate*)texture_rgba_get_instance_private(texture))->texture_registrar = registrar;
+  g_mutex_init(&((TextureRgbaPrivate*)texture_rgba_get_instance_private(texture))->mutex);
+  return texture;
 }
 
 static void texture_rgba_class_init(TextureRgbaClass *klass)

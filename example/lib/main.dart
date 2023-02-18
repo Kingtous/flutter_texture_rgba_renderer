@@ -36,6 +36,7 @@ class _MyAppState extends State<MyApp> {
       if (textureId != -1) {
         debugPrint("Texture register success, textureId=$textureId");
         _textureRgbaRendererPlugin.getTexturePtr(key).then((value) {
+          debugPrint("texture ptr: $value");
           setState(() {
             texturePtr = value;
           });

@@ -41,8 +41,7 @@ class MethodChannelTextureRgbaRenderer extends TextureRgbaRendererPlatform {
 
   @override
   Future<int> getTexturePtr(int key) async {
-    // TODO: currently only supports Windows.
-    if (!Platform.isWindows) {
+    if (Platform.isMacOS) {
       return -1;
     }
     final ptr =

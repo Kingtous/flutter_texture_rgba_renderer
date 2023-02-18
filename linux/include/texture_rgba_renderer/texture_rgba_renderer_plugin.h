@@ -21,6 +21,9 @@ FLUTTER_PLUGIN_EXPORT GType texture_rgba_renderer_plugin_get_type();
 FLUTTER_PLUGIN_EXPORT void texture_rgba_renderer_plugin_register_with_registrar(
     FlPluginRegistrar* registrar);
 
+// Keep the same symbol name with Windows.
+FLUTTER_PLUGIN_EXPORT void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int width, int height);
+
 G_END_DECLS
 
 #endif  // FLUTTER_PLUGIN_TEXTURE_RGBA_RENDERER_PLUGIN_H_
