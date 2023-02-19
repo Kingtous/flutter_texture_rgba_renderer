@@ -65,8 +65,8 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     if (self->g_renderer_map->find(key) != self->g_renderer_map->end())
     {
       fl_texture_registrar_unregister_texture(self->texture_registrar, FL_TEXTURE((*self->g_renderer_map)[key]));
+      self->g_renderer_map->erase(key);
     }
-    self->g_renderer_map->erase(key);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
   }
   else if (strcmp(method, "onRgba") == 0)
@@ -169,6 +169,9 @@ extern "C" {
         priv->buffer_length = 4 * width * height;
         auto copied_data = new uint8_t[priv->buffer_length];
         memcpy(copied_data, buffer, priv->buffer_length); 
+        if (priv->buffer != nullptr) {
+          delete[] priv->buffer;
+        }
         priv->buffer = copied_data;
         priv->video_height = height;
         priv->video_width = width;

@@ -54,13 +54,13 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
   // Note that Flutter only accepts textures in GL_RGBA8 format.
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width, self->video_height, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, self->buffer);
+  delete[] self->buffer;
   self->buffer = nullptr;
   g_mutex_unlock(&self->mutex);
   *target = GL_TEXTURE_2D;
   *name = self->texture_id;
   *width = self->video_width;
   *height = self->video_height;
-  
 
   return TRUE;
 }
