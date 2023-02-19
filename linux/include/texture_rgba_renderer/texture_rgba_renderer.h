@@ -52,7 +52,7 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
   }
   // For example, we render pixel buffer here.
   // Note that Flutter only accepts textures in GL_RGBA8 format.
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width, self->video_height, 0, GL_RGBA,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width, self->video_height, 0, GL_BGRA,
                GL_UNSIGNED_BYTE, self->buffer);
   delete[] self->buffer;
   self->buffer = nullptr;
