@@ -1,6 +1,6 @@
 # Texture Rgba Renderer 
 
-A texture helper which brings a high level api to handle RGBA data. No frame copy required, and with full hardware acceleration.
+A texture helper which brings a high level api to handle **BGRA** data. No frame copy required, and with full hardware acceleration.
 
 ![Pub Version](https://img.shields.io/pub/v/texture_rgba_renderer)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer?ref=badge_shield)
@@ -21,7 +21,7 @@ typedef std::variant<PixelBufferTexture, GpuSurfaceTexture> TextureVariant;
 
 - [x] MacOS
 
-Note: due to the limitation of supported formats for `CVPixelBuffer`, please use the `BGRA` format instead.
+Note: Please use the `BGRA` format.
 
 ## Getting Started
 
