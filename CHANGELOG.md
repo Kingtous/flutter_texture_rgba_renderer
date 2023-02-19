@@ -1,3 +1,7 @@
+## 0.0.6
+* Please use `BGRA` format instead.
+* Memory leak fix for Linux.
+
 ## 0.0.5
 * Initial macOS support.
 
