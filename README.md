@@ -2,6 +2,8 @@
 
 A texture helper which brings a high level api to handle **BGRA** data. No frame copy required, and with full hardware acceleration.
 
+![](./res/banner.png)
+
 ![Pub Version](https://img.shields.io/pub/v/texture_rgba_renderer)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FKingtous%2Fflutter_texture_rgba_renderer?ref=badge_shield)
 
