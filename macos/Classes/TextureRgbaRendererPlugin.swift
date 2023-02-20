@@ -55,8 +55,22 @@ public class TextureRgbaRendererPlugin: NSObject, FlutterPlugin {
         } else {
             result(textureRgba!.markFrameAvaliable(data: data.data, width: width, height: height))
         }
+    case "getTexturePtr":
+        let args = call.arguments as! Dictionary<String, Any?>
+        let key = args["key"] as! Int64
+        let textureRgba = renderer[key]
+        if (textureRgba == nil) {
+            result(0)
+        } else {
+            let ptr = withUnsafePointer(to: textureRgba!) { p in
+                return UnsafeRawPointer(p);
+            };
+            let intAddr = UInt(bitPattern: ptr)
+            result(intAddr)
+        }
     default:
       result(FlutterMethodNotImplemented)
     }
   }
 }
+

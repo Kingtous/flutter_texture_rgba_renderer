@@ -1,4 +1,8 @@
+// ignore: unused_import
 import 'dart:io';
+// Compatible with lint in Flutter 3.0.5
+// ignore: unused_import
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -41,9 +45,6 @@ class MethodChannelTextureRgbaRenderer extends TextureRgbaRendererPlatform {
 
   @override
   Future<int> getTexturePtr(int key) async {
-    if (Platform.isMacOS) {
-      return -1;
-    }
     final ptr =
         await methodChannel.invokeMethod('getTexturePtr', {"key": key}) ??
             false;
