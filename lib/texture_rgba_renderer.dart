@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-export './texture_rgba_ffi.dart';
+export './texture_rgba_ffi.dart' show Native;
 
 import 'texture_rgba_renderer_platform_interface.dart';
 
