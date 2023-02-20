@@ -23,7 +23,8 @@ private:
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
 	int64_t texture_id_;
 	mutable std::mutex mutex_;
-	int last_fg_index_ = 0;
+	bool pixel_buff_set_ = false;
+	int last_fg_index_ = 1;
 	int fg_index_ = 0;
 	size_t width_[2] = {0, 0};
 	size_t height_[2] = {0, 0};
