@@ -1,44 +1,9 @@
+#ifndef TEXTURE_RGBA_H_
+#define TEXTURE_RGBA_H_
+
 #include <flutter/texture_registrar.h>
 #include <mutex>
 #include <chrono>
-
-#pragma once
-
-using namespace std;
-using namespace std::chrono;
-class Timer
-{
-public:
-Timer() : m_begin(high_resolution_clock::now()) {}
-void reset() { m_begin = high_resolution_clock::now(); }
-int64_t elapsed() const
-{
-return duration_cast<chrono::milliseconds>(high_resolution_clock::now() - m_begin).count();
-}
-int64_t elapsed_micro() const
-{
-return duration_cast<chrono::microseconds>(high_resolution_clock::now() - m_begin).count();
-}
-int64_t elapsed_nano() const
-{
-return duration_cast<chrono::nanoseconds>(high_resolution_clock::now() - m_begin).count();
-}
-int64_t elapsed_seconds() const
-{
-return duration_cast<chrono::seconds>(high_resolution_clock::now() - m_begin).count();
-}
-int64_t elapsed_minutes() const
-{
-return duration_cast<chrono::minutes>(high_resolution_clock::now() - m_begin).count();
-}
-int64_t elapsed_hours() const
-{
-return duration_cast<chrono::hours>(high_resolution_clock::now() - m_begin).count();
-}
-private:
-time_point<high_resolution_clock> m_begin;
-};
-
 
 class TextureRgba
 {
@@ -58,7 +23,12 @@ private:
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
 	int64_t texture_id_;
 	mutable std::mutex mutex_;
-	std::vector<uint8_t> buffer_tmp_;
+	int last_fg_index_ = 0;
+	int fg_index_ = 0;
+	size_t width_[2] = {0, 0};
+	size_t height_[2] = {0, 0};
+	std::vector<uint8_t> buffer_tmp_[2];
 	Timer timer_;
 };
 
+#endif  // TEXTURE_RGBA_H_
