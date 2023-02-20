@@ -55,8 +55,20 @@ Check the example for details.
 
 ## API
 
-To improving better convienent interface for both dart and native developers, the plugin provides two kinds of APi to render the frame.
+For a better convienent interface for both dart and native developers, the plugin provides two kinds of APi to render the frame.
 
+Benchmark:
+
+macOS Bigsur qemu vm (4+8G), with OpenGL accelerated. Release build.
+
+| API Kind | FPS(Average) | 
+|----|-----|
+| Method Channel (Dart) API | ~45 |
+| Native API | ~**670** |
+
+Conclusion:
+
+For a better performance, please use `Native` API provided by this plugin.
 
 ### Dart API
 
