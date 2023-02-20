@@ -31,6 +31,8 @@ class _MyAppState extends State<MyApp> {
   final random = Random();
   Uint8List? data;
   Timer? _timer;
+  int time = 0;
+  int method = 0;
 
   @override
   void initState() {
@@ -53,22 +55,39 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void start() {
+  void start(int methodId) {
     debugPrint("start mockPic");
+    method = methodId;
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
-      // data = mockPicture(width, height);
-      // Method.1: with MethodChannel
-      // final res =
-      //     await _textureRgbaRendererPlugin.onRgba(key, data!, height, width);
-      // if (!res) {
-      //   debugPrint("WARN: render failed");
-      // }
-      final dataPtr = mockPicturePtr(width, height);
-      // Method.2: with native ffi
-      Native.instance.onRgba(
-          Pointer.fromAddress(texturePtr).cast<Void>(), dataPtr, width, height);
-      malloc.free(dataPtr);
+    // 60 fps
+    _timer =
+        Timer.periodic(const Duration(milliseconds: 1000 ~/ 60), (timer) async {
+      if (methodId == 0) {
+        // Method.1: with MethodChannel
+        data = mockPicture(width, height);
+        final t1 = DateTime.now().microsecondsSinceEpoch;
+        final res =
+            await _textureRgbaRendererPlugin.onRgba(key, data!, height, width);
+        final t2 = DateTime.now().microsecondsSinceEpoch;
+        setState(() {
+          time = t2 - t1;
+        });
+
+        if (!res) {
+          debugPrint("WARN: render failed");
+        }
+      } else {
+        final dataPtr = mockPicturePtr(width, height);
+        // Method.2: with native ffi
+        final t1 = DateTime.now().microsecondsSinceEpoch;
+        Native.instance.onRgba(Pointer.fromAddress(texturePtr).cast<Void>(),
+            dataPtr, width, height);
+        final t2 = DateTime.now().microsecondsSinceEpoch;
+        setState(() {
+          time = t2 - t1;
+        });
+        malloc.free(dataPtr);
+      }
     });
   }
 
@@ -102,27 +121,41 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            textureId == -1
-                ? const Offstage()
-                : Container(
-                    alignment: Alignment.center,
-                    child: Container(
-                        decoration: const BoxDecoration(color: Colors.black),
+        body: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                textureId == -1
+                    ? const Offstage()
+                    : Container(
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(color: Colors.blue),
+                        // decoration: const BoxDecoration(color: Colors.black),
                         width: width.toDouble(),
                         height: height.toDouble(),
                         child: Texture(textureId: textureId)),
-                  ),
-            Text(
-                "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
-            IconButton(
-              icon: const Icon(Icons.play_arrow),
-              onPressed: start,
+                Text(
+                    "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
+                TextButton.icon(
+                  label: const Text("play with texture (method channel API)"),
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () => start(0),
+                ),
+                TextButton.icon(
+                  label: const Text("play with texture (native API, faster)"),
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () => start(1),
+                ),
+                Text(
+                    "Current mode: ${method == 0 ? 'Method Channel API' : 'Native API'}"),
+                time != 0
+                    ? Text("FPS: ${1000000 ~/ time} fps")
+                    : const Offstage()
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

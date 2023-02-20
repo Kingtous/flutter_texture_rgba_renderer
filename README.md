@@ -1,6 +1,10 @@
 # Texture Rgba Renderer 
 
-A texture helper which brings a high level api to handle **BGRA** data. No frame copy required, and with full hardware acceleration.
+A general texture helper which brings both of high and low level api to handle **BGRA** data for Flutter. Only one time frame copy required, and aims to get a full hardware acceleration.
+
+This plugin is originally developed for [RustDesk](https://github.com/rustdesk/rustdesk).
+
+Now it's in active development, which aims to improve the memory usage and performance. 
 
 ![](./res/banner.png)
 
