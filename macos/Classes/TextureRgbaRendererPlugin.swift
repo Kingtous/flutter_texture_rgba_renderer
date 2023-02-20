@@ -62,10 +62,8 @@ public class TextureRgbaRendererPlugin: NSObject, FlutterPlugin {
         if (textureRgba == nil) {
             result(0)
         } else {
-            let ptr = withUnsafePointer(to: textureRgba!) { p in
-                return UnsafeRawPointer(p);
-            };
-            let intAddr = UInt(bitPattern: ptr)
+            let unmanaged = Unmanaged.passUnretained(textureRgba!)
+            let intAddr = UInt(bitPattern: unmanaged.toOpaque())
             result(intAddr)
         }
     default:
