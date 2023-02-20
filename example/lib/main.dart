@@ -9,28 +9,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:texture_rgba_renderer/texture_rgba_renderer.dart';
 
-typedef F1 = Void Function(
-    Pointer<Void> ptr, Pointer<Uint8> buffer, Int32 width, Int32 height);
-typedef F1Dart = void Function(
-    Pointer<Void> ptr, Pointer<Uint8> buffer, int width, int height);
-
-class Native {
-  Native._();
-
-  static get _instance => Native._()..init();
-  static get instance => _instance;
-
-  late F1Dart onRgba;
-
-  init() {
-    final lib = DynamicLibrary.process();
-    onRgba = lib.lookupFunction<F1, F1Dart>("FlutterRgbaRendererPluginOnRgba");
-  }
-}
-
 void main() {
-  // Load the native instance.
-  final instance = Native.instance;
   runApp(const MyApp());
 }
 
@@ -51,6 +30,7 @@ class _MyAppState extends State<MyApp> {
   int texturePtr = 0;
   final random = Random();
   Uint8List? data;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -75,7 +55,8 @@ class _MyAppState extends State<MyApp> {
 
   void start() {
     debugPrint("start mockPic");
-    Timer.periodic(const Duration(milliseconds: 30), (timer) async {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
       // data = mockPicture(width, height);
       // Method.1: with MethodChannel
       // final res =
@@ -93,6 +74,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     if (key != -1) {
       _textureRgbaRendererPlugin.closeTexture(key);
     }
@@ -110,20 +92,19 @@ class _MyAppState extends State<MyApp> {
     final pic = List.generate(width * height * 4, (index) {
       return random.nextInt(255);
     });
-    final pic_addr = malloc.allocate(pic.length).cast<Uint8>();
-    final list = pic_addr.asTypedList(pic.length);
+    final picAddr = malloc.allocate(pic.length).cast<Uint8>();
+    final list = picAddr.asTypedList(pic.length);
     list.setRange(0, pic.length, pic);
-    return pic_addr;
+    return picAddr;
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Stack(
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             textureId == -1
                 ? const Offstage()
@@ -135,18 +116,12 @@ class _MyAppState extends State<MyApp> {
                         height: height.toDouble(),
                         child: Texture(textureId: textureId)),
                   ),
-            Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                  "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
+            Text(
+                "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
+            IconButton(
+              icon: const Icon(Icons.play_arrow),
+              onPressed: start,
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: IconButton(
-                icon: const Icon(Icons.play_arrow),
-                onPressed: start,
-              ),
-            )
           ],
         ),
       ),

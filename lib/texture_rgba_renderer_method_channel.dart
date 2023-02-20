@@ -1,7 +1,7 @@
-// ignore: unused_import
+// ignore: unused_import, unnecessary_import
 import 'dart:io';
 // Compatible with lint in Flutter 3.0.5
-// ignore: unused_import
+// ignore: unused_import, unnecessary_import
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';

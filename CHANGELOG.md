@@ -1,3 +1,6 @@
+## 0.0.7
+* add the FFI function and ptr getter for macOS.
+
 ## 0.0.6
 * Please use `BGRA` format instead.
 * Memory leak fix for Linux.
