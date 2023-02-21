@@ -7,6 +7,8 @@
 
 #include "texture_rgba_renderer_plugin.h"
 
+#include <vector>
+
 struct _TextureRgbaClass
 {
   FlTextureGLClass parent_class;
@@ -16,10 +18,11 @@ struct TextureRgbaPrivate
 {
   FlTextureRegistrar* texture_registrar = nullptr;
   GLuint texture_id = 0;
-  const uint8_t *buffer = nullptr;
-  size_t buffer_length = 0;
-  int32_t video_width = 0;
-  int32_t video_height = 0;
+  const uint8_t *buffer[2] = {nullptr, nullptr};
+  size_t current_reading_index = 0;
+  bool buffer_ready = false;
+  int32_t video_width[2] = {0, 0};
+  int32_t video_height[2] = {0, 0};
   GMutex mutex;
 };
 
@@ -39,7 +42,13 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
 {
   TextureRgbaPrivate *self = (TextureRgbaPrivate *)
       texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+  
   g_mutex_lock(&self->mutex);
+  if (self->buffer_ready) {
+    self->current_reading_index ^= 1;
+  }
+  auto index = self->current_reading_index;
+
   if (self->texture_id == 0)
   {
     glGenTextures(1, &self->texture_id);
@@ -52,16 +61,19 @@ static gboolean texture_rgba_populate(FlTextureGL *texture,
   }
   // For example, we render pixel buffer here.
   // Note that Flutter only accepts textures in GL_RGBA8 format.
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width, self->video_height, 0, GL_BGRA,
-               GL_UNSIGNED_BYTE, self->buffer);
-  delete[] self->buffer;
-  self->buffer = nullptr;
-  g_mutex_unlock(&self->mutex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->video_width[index], self->video_height[index], 0, GL_BGRA,
+               GL_UNSIGNED_BYTE, self->buffer[index]);
+  // Now we can release the self->buffer.
+  if (self->buffer[index] != nullptr) {
+    delete[] self->buffer[index];
+    self->buffer[index] = nullptr;
+  }
+  self->buffer_ready = false;
   *target = GL_TEXTURE_2D;
   *name = self->texture_id;
-  *width = self->video_width;
-  *height = self->video_height;
-
+  *width = self->video_width[index];
+  *height = self->video_height[index];
+  g_mutex_unlock(&self->mutex);
   return TRUE;
 }
 

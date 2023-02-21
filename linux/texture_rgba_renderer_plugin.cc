@@ -12,6 +12,8 @@
 #include <cstring>
 #include <unordered_map>
 
+void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height);
+
 struct _TextureRgbaRendererPlugin
 {
   GObject parent_instance;
@@ -74,21 +76,14 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     auto args = fl_method_call_get_args(method_call);
     auto key = fl_value_get_int(fl_value_lookup_string(args, "key"));
     auto data = fl_value_get_uint8_list(fl_value_lookup_string(args, "data"));
-    auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
-    auto buffer = new uint8_t[data_length];
-    memcpy(buffer, data, data_length);
+    // auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
     auto width = fl_value_get_int(fl_value_lookup_string(args, "width"));
     auto height = fl_value_get_int(fl_value_lookup_string(args, "height"));
+    #ifdef _DEBUG
+    g_assert(data_length == width * height * 4);
+    #endif
     auto texture_rgba = (*self->g_renderer_map)[key];
-    auto texture_rgba_private = (TextureRgbaPrivate *)texture_rgba_get_instance_private((*self->g_renderer_map)[key]);
-    g_mutex_lock(&texture_rgba_private->mutex);
-    if (texture_rgba_private->buffer != nullptr) {
-      delete[] texture_rgba_private->buffer;
-    } 
-    texture_rgba_private->buffer = buffer;
-    texture_rgba_private->video_height = height;
-    texture_rgba_private->video_width = width;
-    g_mutex_unlock(&texture_rgba_private->mutex);
+    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, width, height);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(fl_texture_registrar_mark_texture_frame_available(self->texture_registrar, FL_TEXTURE(texture_rgba)))));
   }
@@ -164,21 +159,28 @@ extern "C" {
       TextureRgba* texture_rgba = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture_rgba_ptr);
       auto priv = (TextureRgbaPrivate *)texture_rgba_get_instance_private(texture_rgba);
       g_mutex_lock(&priv->mutex);
+      // private has registered a texture_id,
       if (priv->texture_id != 0) {
         // copy data to the texture.
-        priv->buffer_length = 4 * width * height;
-        auto copied_data = new uint8_t[priv->buffer_length];
-        memcpy(copied_data, buffer, priv->buffer_length); 
-        if (priv->buffer != nullptr) {
-          delete[] priv->buffer;
+        auto buffer_length = 4 * width * height;
+        auto copied_data = new uint8_t[buffer_length];
+        memcpy(copied_data, buffer, buffer_length); 
+        // It's safe to working on a non reading index
+        auto current_working_index = priv->current_reading_index ^ 1;
+        // Dropped frame, let's free this.
+        if (priv->buffer[current_working_index] != nullptr) {
+          delete[] priv->buffer[current_working_index];
         }
-        priv->buffer = copied_data;
-        priv->video_height = height;
-        priv->video_width = width;
-        fl_texture_registrar_mark_texture_frame_available(
-          priv->texture_registrar,
-          FL_TEXTURE(texture_rgba)
-        );
+        priv->buffer[current_working_index] = copied_data;
+        priv->video_height[current_working_index] = height;
+        priv->video_width[current_working_index] = width;
+        if (!priv->buffer_ready) {
+          priv->buffer_ready = true;
+          fl_texture_registrar_mark_texture_frame_available(
+            priv->texture_registrar,
+            FL_TEXTURE(texture_rgba)
+          );
+        }
       }
       g_mutex_unlock(&priv->mutex);
    }

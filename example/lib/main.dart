@@ -72,7 +72,6 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           time = t2 - t1;
         });
-
         if (!res) {
           debugPrint("WARN: render failed");
         }
@@ -121,41 +120,40 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                textureId == -1
-                    ? const Offstage()
-                    : Container(
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(color: Colors.blue),
-                        // decoration: const BoxDecoration(color: Colors.black),
-                        width: width.toDouble(),
-                        height: height.toDouble(),
-                        child: Texture(textureId: textureId)),
-                Text(
-                    "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
-                TextButton.icon(
-                  label: const Text("play with texture (method channel API)"),
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () => start(0),
-                ),
-                TextButton.icon(
-                  label: const Text("play with texture (native API, faster)"),
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () => start(1),
-                ),
-                Text(
-                    "Current mode: ${method == 0 ? 'Method Channel API' : 'Native API'}"),
-                time != 0
-                    ? Text("FPS: ${1000000 ~/ time} fps")
-                    : const Offstage()
-              ],
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(child: textureId == -1
+                ? const Offstage()
+                : Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(color: Colors.blue),
+                      // decoration: const BoxDecoration(color: Colors.black),
+                      // width: width.toDouble(),
+                      // height: height.toDouble(),
+                      child: Texture(textureId: textureId)),
+                ),),
+            Text(
+                "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
+            TextButton.icon(
+              label: const Text("play with texture (method channel API)"),
+              icon: const Icon(Icons.play_arrow),
+              onPressed: () => start(0),
             ),
-          ),
+            TextButton.icon(
+              label: const Text("play with texture (native API, faster)"),
+              icon: const Icon(Icons.play_arrow),
+              onPressed: () => start(1),
+            ),
+            Text(
+                "Current mode: ${method == 0 ? 'Method Channel API' : 'Native API'}"),
+            time != 0
+                ? Text("FPS: ${1000000 ~/ time} fps")
+                : const Offstage()
+          ],
         ),
       ),
     );
