@@ -1,9 +1,6 @@
 #include "texture_rgba.h"
 #include <iostream>
 
-#define BG 0
-#define FG 1
-
 
 TextureRgba::TextureRgba(flutter::TextureRegistrar *texture_registrar)
 {
@@ -29,9 +26,10 @@ void TextureRgba::MarkVideoFrameAvailable(
 	}
 
 	const std::lock_guard<std::mutex> lock(mutex_);
-	buffer.swap(buffer_tmp_[BG]);
-	width_ = width;
-	height_ = height;
+	int bg_index = fg_index_ ^ 1;
+	buffer.swap(buffer_tmp_[bg_index]);
+	width_[bg_index] = width;
+	height_[bg_index] = height;
 	if (!buff_ready_)
 	{
 		buff_ready_ = true;
@@ -46,10 +44,10 @@ inline const FlutterDesktopPixelBuffer *TextureRgba::buffer()
 	const std::lock_guard<std::mutex> lock(mutex_);
 	if (buff_ready_)
 	{
-		buffer_tmp_[FG].swap(buffer_tmp_[BG]);
-		flutter_pixel_buffer_.buffer = static_cast<const uint8_t *>(buffer_tmp_[FG].data());
-		flutter_pixel_buffer_.width = width_;
-		flutter_pixel_buffer_.height = height_;
+		fg_index_ ^= 1;
+		flutter_pixel_buffer_.buffer = static_cast<const uint8_t *>(buffer_tmp_[fg_index_].data());
+		flutter_pixel_buffer_.width = width_[fg_index_];
+		flutter_pixel_buffer_.height = height_[fg_index_];
 		buff_ready_ = false;
 	}
 	return &this->flutter_pixel_buffer_;
