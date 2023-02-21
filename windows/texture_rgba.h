@@ -22,14 +22,11 @@ private:
 	flutter::TextureRegistrar* texture_registrar_ = nullptr;
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
 	int64_t texture_id_;
-	mutable std::mutex mutex_;
-	bool pixel_buff_set_ = false;
-	int last_fg_index_ = 1;
-	int fg_index_ = 0;
-	size_t width_[2] = {0, 0};
-	size_t height_[2] = {0, 0};
+	std::mutex mutex_;
+	bool buff_ready_ = false;
+	size_t width_;
+	size_t height_;
 	std::vector<uint8_t> buffer_tmp_[2];
-	Timer timer_;
 };
 
 #endif  // TEXTURE_RGBA_H_
