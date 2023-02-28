@@ -6,16 +6,19 @@
 
 #include "texture_rgba_renderer_plugin.h"
 
-struct _TextureRgbaClass
-{
-  FlPixelBufferTextureClass parent_class;
-};
+G_BEGIN_DECLS
 
-struct TextureRgbaPrivate
+typedef struct {
+  FlPixelBufferTextureClass parent_class;
+} TextureRgbaClass;
+
+struct _TextureRgba
 {
+  FlPixelBufferTexture parent_instance;
+
+  uint8_t *buffer = nullptr;
   FlTextureRegistrar* texture_registrar = nullptr;
   int64_t texture_id = 0;
-  uint8_t *buffer = nullptr;
   uint8_t *prior_buffer = nullptr;
   gboolean buffer_ready = FALSE;
   gboolean terminated = FALSE;
@@ -24,12 +27,17 @@ struct TextureRgbaPrivate
   GMutex mutex;
 };
 
+typedef struct _TextureRgba TextureRgba;
+
 /// Constructor.
-G_DECLARE_DERIVABLE_TYPE(TextureRgba, texture_rgba, TEXTURE_RGBA_RENDERER, TEXTURE_RGBA, FlPixelBufferTextureClass)
+// G_DECLARE_DERIVABLE_TYPE(TextureRgba, texture_rgba, TEXTURE_RGBA_RENDERER, TEXTURE_RGBA, FlPixelBufferTextureClass)
 /// Add private data.
-G_DEFINE_TYPE_WITH_CODE(TextureRgba, texture_rgba,
-                        fl_pixel_buffer_texture_get_type(),
-                        G_ADD_PRIVATE(TextureRgba))
+G_DEFINE_TYPE(TextureRgba, texture_rgba,
+                        fl_pixel_buffer_texture_get_type())
+
+#define TEXTURE_RGBA(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), texture_rgba_get_type(), \
+                              TextureRgba))
 
 static inline void switch_rgba(uint8_t* pixels, int width, int height) {
     uint8_t temp;
@@ -42,17 +50,13 @@ static inline void switch_rgba(uint8_t* pixels, int width, int height) {
 }
 
 
-static void texture_rgba_terminate(TextureRgba* texture) {
-  TextureRgbaPrivate *self = (TextureRgbaPrivate *)
-      texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+static void texture_rgba_terminate(TextureRgba* self) {
   g_mutex_lock(&self->mutex);
   g_atomic_int_set(&self->terminated, TRUE);
   g_mutex_unlock(&self->mutex);
 }
 
-static gboolean texture_rgba_is_terminate(TextureRgba* texture) {
-  TextureRgbaPrivate *self = (TextureRgbaPrivate *)
-      texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+static gboolean texture_rgba_is_terminate(TextureRgba* self) {
   return g_atomic_int_get(&self->terminated);
 }
 
@@ -61,20 +65,15 @@ static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
                           uint32_t* width,
                           uint32_t* height,
                           GError** error) {
-  TextureRgbaPrivate *self = (TextureRgbaPrivate *)
-      texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+  TextureRgba *self = TEXTURE_RGBA(texture);
   // This method is called on Render Thread. Be careful with your
   // cross-thread operation.
   g_mutex_lock(&self->mutex);
-  if (self->prior_buffer) {
-    delete[] self->prior_buffer;
-    self->prior_buffer = nullptr;
-  }
   // @width and @height are initially stored the canvas size in Flutter.
   // You must prepare your pixel buffer in RGBA format.
   // So you may do some format conversion first if your original pixel
   // buffer is not in RGBA format.
-  auto* buffer = g_atomic_pointer_get(&self->buffer);
+  uint8_t* buffer = (uint8_t*)g_atomic_pointer_get(&self->buffer);
   // manage_your_pixel_buffer_here ();
   if (g_atomic_int_get(&self->buffer_ready)) {
     // Directly return pointer to your pixel buffer here.
@@ -83,6 +82,10 @@ static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
     // next tick of Render Thread.
     // If it is hard to manage lifetime of your pixel buffer, you should
     // take look into #FlTextureGL.
+    if (self->prior_buffer) {
+      delete[] self->prior_buffer;
+      self->prior_buffer = nullptr;
+    }
     *out_buffer = buffer;
     *width = g_atomic_int_get(&self->video_width);
     *height = g_atomic_int_get(&self->video_height);
@@ -97,9 +100,8 @@ static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
     return FALSE;
   } else {
     g_mutex_unlock(&self->mutex);
-    // set @error to report failure.
-    *error = g_error_new(g_quark_from_static_string("TextureRgba Renderer"), 1, "the texture is waiting for incoming images.");
-    return FALSE;
+    // *error = g_error_new(g_quark_from_static_string("TextureRgba Renderer"), 1, "waiting for new incoming images.");
+    return TRUE;
   }
 }
 
@@ -139,9 +141,9 @@ static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
 
 static TextureRgba *texture_rgba_new(FlTextureRegistrar* registrar)
 {
-  auto texture = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(g_object_new(texture_rgba_get_type(), nullptr));
-  ((TextureRgbaPrivate*)texture_rgba_get_instance_private(texture))->texture_registrar = registrar;
-  g_mutex_init(&((TextureRgbaPrivate*)texture_rgba_get_instance_private(texture))->mutex);
+  auto texture = TEXTURE_RGBA(g_object_new(texture_rgba_get_type(), nullptr));
+  texture->texture_registrar = registrar;
+  g_mutex_init(&texture->mutex);
   return texture;
 }
 
@@ -155,4 +157,5 @@ static void texture_rgba_init(TextureRgba* self) {
           texture_rgba_copy_pixels;
 }
 
+G_END_DECLS
 #endif

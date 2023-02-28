@@ -44,8 +44,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     {
       TextureRgba* texture_rgba = texture_rgba_new(self->texture_registrar);
       auto texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
-      auto* priv = (TextureRgbaPrivate*)texture_rgba_get_instance_private(texture_rgba);
-      priv->texture_id = texture_id;
+      texture_rgba->texture_id = texture_id;
       g_renderer_map.insert(std::make_pair(key, texture_rgba));
       // Register to the registrar.
       fl_texture_registrar_register_texture(self->texture_registrar, FL_TEXTURE(texture_rgba));
@@ -142,26 +141,25 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 
 extern "C" {
    void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height) {
-      TextureRgba* texture_rgba = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture_rgba_ptr);
-      auto priv = (TextureRgbaPrivate *)texture_rgba_get_instance_private(texture_rgba);
-      g_mutex_lock(&priv->mutex);
-      // private has registered a texture_id,
-      if (priv->texture_id != 0 && !g_atomic_int_get(&priv->buffer_ready) && !texture_rgba_is_terminate(texture_rgba)) {
+      TextureRgba* self = TEXTURE_RGBA(texture_rgba_ptr);
+      g_mutex_lock(&self->mutex);
+      // selfate has registered a texture_id,
+      if (self->texture_id != 0 && !g_atomic_int_get(&self->buffer_ready) && !texture_rgba_is_terminate(self)) {
         // copy data to the texture.
         auto buffer_length = 4 * width * height;
         auto copied_data = new uint8_t[buffer_length];
         memcpy(copied_data, buffer, buffer_length); 
         switch_rgba(copied_data, width, height);
         // It's safe to working on a non reading index
-        g_atomic_pointer_set(&priv->buffer, copied_data);
-        g_atomic_int_set(&priv->video_height, height);
-        g_atomic_int_set(&priv->video_width, width);
-        g_atomic_int_set(&priv->buffer_ready, TRUE);
+        g_atomic_pointer_set(&self->buffer, copied_data);
+        g_atomic_int_set(&self->video_height, height);
+        g_atomic_int_set(&self->video_width, width);
+        g_atomic_int_set(&self->buffer_ready, TRUE);
         fl_texture_registrar_mark_texture_frame_available(
-          priv->texture_registrar,
-          FL_TEXTURE(texture_rgba)
+          self->texture_registrar,
+          FL_TEXTURE(self)
         );
       }
-      g_mutex_unlock(&priv->mutex);
+      g_mutex_unlock(&self->mutex);
    }
 };
