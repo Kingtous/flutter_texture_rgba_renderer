@@ -42,7 +42,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     }
     else
     {
-      g_autoptr(TextureRgba) texture_rgba = texture_rgba_new(self->texture_registrar);
+      TextureRgba* texture_rgba = texture_rgba_new(self->texture_registrar);
       auto texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
       FL_TEXTURE_GL_GET_CLASS(texture_rgba)->populate =
           texture_rgba_populate;
@@ -59,6 +59,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     if (g_renderer_map.find(key) != g_renderer_map.end())
     {
       fl_texture_registrar_unregister_texture(self->texture_registrar, FL_TEXTURE(g_renderer_map[key]));
+      texture_rgba_terminate(g_renderer_map[key]);
       g_renderer_map.erase(key);
     }
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
@@ -141,32 +142,24 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 
 extern "C" {
    void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height) {
-    fprintf(stderr, "onRgba called\n");
       TextureRgba* texture_rgba = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture_rgba_ptr);
       auto priv = (TextureRgbaPrivate *)texture_rgba_get_instance_private(texture_rgba);
       g_mutex_lock(&priv->mutex);
       // private has registered a texture_id,
-      if (priv->texture_id != 0) {
+      if (priv->texture_id != 0 && !g_atomic_int_get(&priv->buffer_ready) && !texture_rgba_is_terminate(texture_rgba)) {
         // copy data to the texture.
         auto buffer_length = 4 * width * height;
         auto copied_data = new uint8_t[buffer_length];
         memcpy(copied_data, buffer, buffer_length); 
         // It's safe to working on a non reading index
-        auto current_working_index = priv->current_reading_index ^ 1;
-        // Dropped frame, let's free this.
-        if (priv->buffer[current_working_index] != nullptr) {
-          delete[] priv->buffer[current_working_index];
-        }
-        priv->buffer[current_working_index] = copied_data;
-        priv->video_height[current_working_index] = height;
-        priv->video_width[current_working_index] = width;
-        if (!priv->buffer_ready) {
-          priv->buffer_ready = true;
-          fl_texture_registrar_mark_texture_frame_available(
-            priv->texture_registrar,
-            FL_TEXTURE(texture_rgba)
-          );
-        }
+        g_atomic_pointer_set(&priv->buffer, copied_data);
+        g_atomic_int_set(&priv->video_height, height);
+        g_atomic_int_set(&priv->video_width, width);
+        g_atomic_int_set(&priv->buffer_ready, TRUE);
+        fl_texture_registrar_mark_texture_frame_available(
+          priv->texture_registrar,
+          FL_TEXTURE(texture_rgba)
+        );
       }
       g_mutex_unlock(&priv->mutex);
    }

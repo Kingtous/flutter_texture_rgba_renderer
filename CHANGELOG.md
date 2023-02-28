@@ -1,3 +1,6 @@
+## 0.0.9
+* try fixing the memory corrupt issue on Linux.
+
 ## 0.0.7
 * add the FFI function and ptr getter for macOS.
 
