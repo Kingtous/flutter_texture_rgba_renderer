@@ -12,13 +12,13 @@
 #include <cstring>
 #include <unordered_map>
 
-void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height);
+std::unordered_map<int64_t, TextureRgba *> g_renderer_map;
 
+void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height);
 struct _TextureRgbaRendererPlugin
 {
   GObject parent_instance;
   FlTextureRegistrar *texture_registrar;
-  std::unordered_map<int64_t, TextureRgba *> *g_renderer_map;
 };
 
 G_DEFINE_TYPE(TextureRgbaRendererPlugin, texture_rgba_renderer_plugin, g_object_get_type())
@@ -32,19 +32,11 @@ static void texture_rgba_renderer_plugin_handle_method_call(
 
   const gchar *method = fl_method_call_get_name(method_call);
 
-  if (strcmp(method, "getPlatformVersion") == 0)
-  {
-    struct utsname uname_data = {};
-    uname(&uname_data);
-    g_autofree gchar *version = g_strdup_printf("Linux %s", uname_data.version);
-    g_autoptr(FlValue) result = fl_value_new_string(version);
-    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-  }
-  else if (strcmp(method, "createTexture") == 0)
+  if (strcmp(method, "createTexture") == 0)
   {
     auto args = fl_method_call_get_args(method_call);
     int64_t key = fl_value_get_int(fl_value_lookup_string(args, "key"));
-    if (self->g_renderer_map->find(key) != self->g_renderer_map->end())
+    if (g_renderer_map.find(key) != g_renderer_map.end())
     {
       response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_int(-1)));
     }
@@ -54,7 +46,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
       auto texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
       FL_TEXTURE_GL_GET_CLASS(texture_rgba)->populate =
           texture_rgba_populate;
-      self->g_renderer_map->insert(std::make_pair(key, texture_rgba));
+      g_renderer_map.insert(std::make_pair(key, texture_rgba));
       // Register to the registrar.
       fl_texture_registrar_register_texture(self->texture_registrar, FL_TEXTURE(texture_rgba));
       response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_int(texture_id)));
@@ -64,10 +56,10 @@ static void texture_rgba_renderer_plugin_handle_method_call(
   {
     auto args = fl_method_call_get_args(method_call);
     int64_t key = fl_value_get_int(fl_value_lookup_string(args, "key"));
-    if (self->g_renderer_map->find(key) != self->g_renderer_map->end())
+    if (g_renderer_map.find(key) != g_renderer_map.end())
     {
-      fl_texture_registrar_unregister_texture(self->texture_registrar, FL_TEXTURE((*self->g_renderer_map)[key]));
-      self->g_renderer_map->erase(key);
+      fl_texture_registrar_unregister_texture(self->texture_registrar, FL_TEXTURE(g_renderer_map[key]));
+      g_renderer_map.erase(key);
     }
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
   }
@@ -79,10 +71,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     // auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
     auto width = fl_value_get_int(fl_value_lookup_string(args, "width"));
     auto height = fl_value_get_int(fl_value_lookup_string(args, "height"));
-    #ifdef _DEBUG
-    g_assert(data_length == width * height * 4);
-    #endif
-    auto texture_rgba = (*self->g_renderer_map)[key];
+    auto texture_rgba = g_renderer_map[key];
     FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, width, height);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(fl_texture_registrar_mark_texture_frame_available(self->texture_registrar, FL_TEXTURE(texture_rgba)))));
@@ -91,7 +80,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
   {
     auto args = fl_method_call_get_args(method_call);
     auto key = fl_value_get_int(fl_value_lookup_string(args, "key"));
-    if (self->g_renderer_map->find(key) == self->g_renderer_map->end())
+    if (g_renderer_map.find(key) == g_renderer_map.end())
     {
       response = FL_METHOD_RESPONSE(fl_method_success_response_new(
           fl_value_new_int(0)));
@@ -99,7 +88,7 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     else
     {
       // Return an address.
-      size_t rgba = reinterpret_cast<size_t>((void *)(*self->g_renderer_map)[key]);
+      size_t rgba = reinterpret_cast<size_t>((void *)g_renderer_map[key]);
       response = FL_METHOD_RESPONSE(fl_method_success_response_new(
           fl_value_new_int(rgba)));
     }
@@ -114,7 +103,6 @@ static void texture_rgba_renderer_plugin_handle_method_call(
 
 static void texture_rgba_renderer_plugin_dispose(GObject *object)
 {
-  TEXTURE_RGBA_RENDERER_PLUGIN(object)->g_renderer_map->clear();
   G_OBJECT_CLASS(texture_rgba_renderer_plugin_parent_class)->dispose(object);
 }
 
@@ -123,10 +111,7 @@ static void texture_rgba_renderer_plugin_class_init(TextureRgbaRendererPluginCla
   G_OBJECT_CLASS(klass)->dispose = texture_rgba_renderer_plugin_dispose;
 }
 
-static void texture_rgba_renderer_plugin_init(TextureRgbaRendererPlugin *self)
-{
-  self->g_renderer_map = new std::unordered_map<int64_t, TextureRgba *>();
-}
+static void texture_rgba_renderer_plugin_init(TextureRgbaRendererPlugin *self) {}
 
 static void method_call_cb(FlMethodChannel *channel, FlMethodCall *method_call,
                            gpointer user_data)
@@ -156,6 +141,7 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 
 extern "C" {
    void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height) {
+    fprintf(stderr, "onRgba called\n");
       TextureRgba* texture_rgba = TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture_rgba_ptr);
       auto priv = (TextureRgbaPrivate *)texture_rgba_get_instance_private(texture_rgba);
       g_mutex_lock(&priv->mutex);
