@@ -3,22 +3,20 @@
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
-#include <epoxy/gl.h>
 
 #include "texture_rgba_renderer_plugin.h"
 
-#include <vector>
-
 struct _TextureRgbaClass
 {
-  FlTextureGLClass parent_class;
+  FlPixelBufferTextureClass parent_class;
 };
 
 struct TextureRgbaPrivate
 {
   FlTextureRegistrar* texture_registrar = nullptr;
-  GLuint texture_id = 0;
-  const uint8_t *buffer = nullptr;
+  int64_t texture_id = 0;
+  uint8_t *buffer = nullptr;
+  uint8_t *prior_buffer = nullptr;
   gboolean buffer_ready = FALSE;
   gboolean terminated = FALSE;
   gint32 video_width = 0;
@@ -27,21 +25,28 @@ struct TextureRgbaPrivate
 };
 
 /// Constructor.
-G_DECLARE_DERIVABLE_TYPE(TextureRgba, texture_rgba, TEXTURE_RGBA_RENDERER, TEXTURE_RGBA, FlTextureGL)
+G_DECLARE_DERIVABLE_TYPE(TextureRgba, texture_rgba, TEXTURE_RGBA_RENDERER, TEXTURE_RGBA, FlPixelBufferTextureClass)
 /// Add private data.
 G_DEFINE_TYPE_WITH_CODE(TextureRgba, texture_rgba,
-                        fl_texture_gl_get_type(),
+                        fl_pixel_buffer_texture_get_type(),
                         G_ADD_PRIVATE(TextureRgba))
+
+static inline void switch_rgba(uint8_t* pixels, int width, int height) {
+    uint8_t temp;
+
+    for (int i = 0; i < width * height; i++) {
+        temp = pixels[4 * i];
+        pixels[4 * i] = pixels[4 * i + 2];
+        pixels[4 * i + 2] = temp;
+    }
+}
+
 
 static void texture_rgba_terminate(TextureRgba* texture) {
   TextureRgbaPrivate *self = (TextureRgbaPrivate *)
       texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
   g_mutex_lock(&self->mutex);
   g_atomic_int_set(&self->terminated, TRUE);
-  if (g_atomic_pointer_get(&self->buffer)) {
-    delete[] g_atomic_pointer_get(&self->buffer);
-    g_atomic_pointer_set(&self->buffer, nullptr);
-  }
   g_mutex_unlock(&self->mutex);
 }
 
@@ -51,47 +56,86 @@ static gboolean texture_rgba_is_terminate(TextureRgba* texture) {
   return g_atomic_int_get(&self->terminated);
 }
 
-static gboolean texture_rgba_populate(FlTextureGL *texture,
-                                      uint32_t *target,
-                                      uint32_t *name,
-                                      uint32_t *width,
-                                      uint32_t *height,
-                                      GError **error)
-{
+static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
+                          const uint8_t** out_buffer,
+                          uint32_t* width,
+                          uint32_t* height,
+                          GError** error) {
   TextureRgbaPrivate *self = (TextureRgbaPrivate *)
       texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
-  
+  // This method is called on Render Thread. Be careful with your
+  // cross-thread operation.
   g_mutex_lock(&self->mutex);
-  if (self->texture_id == 0)
-  {
-    glGenTextures(1, &self->texture_id);
-    glBindTexture(GL_TEXTURE_2D, self->texture_id);
-    // further configuration here.
-    g_atomic_pointer_set(&self->buffer, nullptr);
+  if (self->prior_buffer) {
+    delete[] self->prior_buffer;
+    self->prior_buffer = nullptr;
   }
-  else
-  {
-    glBindTexture(GL_TEXTURE_2D, self->texture_id);
+  // @width and @height are initially stored the canvas size in Flutter.
+  // You must prepare your pixel buffer in RGBA format.
+  // So you may do some format conversion first if your original pixel
+  // buffer is not in RGBA format.
+  auto* buffer = g_atomic_pointer_get(&self->buffer);
+  // manage_your_pixel_buffer_here ();
+  if (g_atomic_int_get(&self->buffer_ready)) {
+    // Directly return pointer to your pixel buffer here.
+    // Flutter takes content of your pixel buffer after this function
+    // is finished. So you must make the buffer live long enough until
+    // next tick of Render Thread.
+    // If it is hard to manage lifetime of your pixel buffer, you should
+    // take look into #FlTextureGL.
+    *out_buffer = buffer;
+    *width = g_atomic_int_get(&self->video_width);
+    *height = g_atomic_int_get(&self->video_height);
+    self->prior_buffer = buffer;
+    g_atomic_int_set(&self->buffer_ready, FALSE);
+    g_mutex_unlock(&self->mutex);
+    return TRUE;
+  } else if (g_atomic_int_get(&self->terminated)) {
+    g_mutex_unlock(&self->mutex);
+    // set @error to report failure.
+    *error = g_error_new(g_quark_from_static_string("TextureRgba Renderer"), -1, "the texture is already terminated, ignoring.");
+    return FALSE;
+  } else {
+    g_mutex_unlock(&self->mutex);
+    // set @error to report failure.
+    *error = g_error_new(g_quark_from_static_string("TextureRgba Renderer"), 1, "the texture is waiting for incoming images.");
+    return FALSE;
   }
-  // For example, we render pixel buffer here.
-  // Note that Flutter only accepts textures in GL_RGBA8 format.
-  if (g_atomic_pointer_get(&self->buffer)) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, g_atomic_int_get(&self->video_width), g_atomic_int_get(&self->video_height), 0, GL_BGRA,
-               GL_UNSIGNED_BYTE, g_atomic_pointer_get(&self->buffer));
-  }
-  // Now we can release the self->buffer.
-  if (g_atomic_pointer_get(&self->buffer) != nullptr) {
-    delete[] self->buffer;
-    g_atomic_pointer_set(&self->buffer, nullptr);
-  }
-  g_atomic_int_set(&self->buffer_ready, FALSE);
-  *target = GL_TEXTURE_2D;
-  *name = self->texture_id;
-  *width = g_atomic_int_get(&self->video_width);
-  *height = g_atomic_int_get(&self->video_height);
-  g_mutex_unlock(&self->mutex);
-  return TRUE;
 }
+
+// static gboolean texture_rgba_populate(FlTextureGL *texture,
+//                                       uint32_t *target,
+//                                       uint32_t *name,
+//                                       uint32_t *width,
+//                                       uint32_t *height,
+//                                       GError **error)
+// {
+//   TextureRgbaPrivate *self = (TextureRgbaPrivate *)
+//       texture_rgba_get_instance_private(TEXTURE_RGBA_RENDERER_TEXTURE_RGBA(texture));
+  
+//   g_mutex_lock(&self->mutex);
+//   if (self->texture_id == 0)
+//   {
+//     glGenTextures(1, &self->texture_id);
+//     glBindTexture(GL_TEXTURE_2D, self->texture_id);
+//     // further configuration here.
+//     g_atomic_pointer_set(&self->buffer, nullptr);
+//   }
+//   else
+//   {
+//     glBindTexture(GL_TEXTURE_2D, self->texture_id);
+//   }
+//   // For example, we render pixel buffer here.
+  // // Note that Flutter only accepts textures in GL_RGBA8 format.
+
+//   g_atomic_int_set(&self->buffer_ready, FALSE);
+//   *target = GL_TEXTURE_2D;
+//   *name = self->texture_id;
+//   *width = g_atomic_int_get(&self->video_width);
+//   *height = g_atomic_int_get(&self->video_height);
+//   g_mutex_unlock(&self->mutex);
+//   return TRUE;
+// }
 
 static TextureRgba *texture_rgba_new(FlTextureRegistrar* registrar)
 {
@@ -103,9 +147,12 @@ static TextureRgba *texture_rgba_new(FlTextureRegistrar* registrar)
 
 static void texture_rgba_class_init(TextureRgbaClass *klass)
 {
-  FL_TEXTURE_GL_GET_CLASS(klass)->populate = texture_rgba_populate;
+  FL_PIXEL_BUFFER_TEXTURE_GET_CLASS(klass)->copy_pixels = texture_rgba_copy_pixels;
 }
 
-static void texture_rgba_init(TextureRgba* self) {}
+static void texture_rgba_init(TextureRgba* self) {
+  FL_PIXEL_BUFFER_TEXTURE_GET_CLASS(self)->copy_pixels =
+          texture_rgba_copy_pixels;
+}
 
 #endif

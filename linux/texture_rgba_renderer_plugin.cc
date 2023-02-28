@@ -44,8 +44,8 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     {
       TextureRgba* texture_rgba = texture_rgba_new(self->texture_registrar);
       auto texture_id = reinterpret_cast<int64_t>(FL_TEXTURE(texture_rgba));
-      FL_TEXTURE_GL_GET_CLASS(texture_rgba)->populate =
-          texture_rgba_populate;
+      auto* priv = (TextureRgbaPrivate*)texture_rgba_get_instance_private(texture_rgba);
+      priv->texture_id = texture_id;
       g_renderer_map.insert(std::make_pair(key, texture_rgba));
       // Register to the registrar.
       fl_texture_registrar_register_texture(self->texture_registrar, FL_TEXTURE(texture_rgba));
@@ -151,6 +151,7 @@ extern "C" {
         auto buffer_length = 4 * width * height;
         auto copied_data = new uint8_t[buffer_length];
         memcpy(copied_data, buffer, buffer_length); 
+        switch_rgba(copied_data, width, height);
         // It's safe to working on a non reading index
         g_atomic_pointer_set(&priv->buffer, copied_data);
         g_atomic_int_set(&priv->video_height, height);
