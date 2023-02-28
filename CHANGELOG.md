@@ -1,3 +1,6 @@
+## 0.0.10
+* try fixing the memory corrupt issue on Linux. (change to pixel texture)
+
 ## 0.0.9
 * try fixing the memory corrupt issue on Linux.
 
