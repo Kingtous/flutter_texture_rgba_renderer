@@ -86,10 +86,10 @@ static gboolean texture_rgba_copy_pixels(FlPixelBufferTexture* texture,
       delete[] self->prior_buffer;
       self->prior_buffer = nullptr;
     }
-    *out_buffer = buffer;
+    *out_buffer = (const uint8_t *)buffer;
     *width = g_atomic_int_get(&self->video_width);
     *height = g_atomic_int_get(&self->video_height);
-    self->prior_buffer = buffer;
+    self->prior_buffer = (uint8_t *)buffer;
     g_atomic_int_set(&self->buffer_ready, FALSE);
     g_mutex_unlock(&self->mutex);
     return TRUE;
