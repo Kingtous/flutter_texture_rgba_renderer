@@ -1,3 +1,6 @@
+## 0.0.11
+* compatible for ubuntu 18.04 toolchain.
+
 ## 0.0.10
 * try fixing the memory corrupt issue on Linux. (change to pixel texture)
 
