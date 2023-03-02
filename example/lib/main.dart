@@ -33,6 +33,7 @@ class _MyAppState extends State<MyApp> {
   Timer? _timer;
   int time = 0;
   int method = 0;
+  final rowAlignBytes = 64;
 
   @override
   void initState() {
@@ -64,10 +65,10 @@ class _MyAppState extends State<MyApp> {
         Timer.periodic(const Duration(milliseconds: 1000 ~/ 60), (timer) async {
       if (methodId == 0) {
         // Method.1: with MethodChannel
-        data = mockPicture(width, height);
+        data = mockPicture(width, height, rowAlignBytes);
         final t1 = DateTime.now().microsecondsSinceEpoch;
         final res = await _textureRgbaRendererPlugin.onRgba(
-            key, data!, height, width, 16);
+            key, data!, height, width, rowAlignBytes);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -76,11 +77,11 @@ class _MyAppState extends State<MyApp> {
           debugPrint("WARN: render failed");
         }
       } else {
-        final dataPtr = mockPicturePtr(width, height);
+        final dataPtr = mockPicturePtr(width, height, rowAlignBytes);
         // Method.2: with native ffi
         final t1 = DateTime.now().microsecondsSinceEpoch;
         Native.instance.onRgba(Pointer.fromAddress(texturePtr).cast<Void>(),
-            dataPtr, width, height, 16);
+            dataPtr, width, height, rowAlignBytes);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -99,8 +100,11 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  Uint8List mockPicture(int width, int height) {
-    final pic = List.generate(width * height * 4, (index) {
+  Uint8List mockPicture(int width, int height, int rowAlignBytes) {
+    final ab1 = rowAlignBytes - 1;
+    final padding = (rowAlignBytes - ((width * 4) & ab1)) & ab1;
+    final rowBytes = width * 4 + padding;
+    final pic = List.generate(rowBytes * height, (index) {
       final h = (index / 4) / width;
       final w = (index / 4) % width;
       final p = index & 0x03;
@@ -132,8 +136,11 @@ class _MyAppState extends State<MyApp> {
     return Uint8List.fromList(pic);
   }
 
-  Pointer<Uint8> mockPicturePtr(int width, int height) {
-    final pic = List.generate(width * height * 4, (index) {
+  Pointer<Uint8> mockPicturePtr(int width, int height, int rowAlignBytes) {
+    final ab1 = rowAlignBytes - 1;
+    final padding = (rowAlignBytes - ((width * 4) & ab1)) & ab1;
+    final rowBytes = width * 4 + padding;
+    final pic = List.generate(rowBytes * height, (index) {
       final h = (index / 4) / width;
       final w = (index / 4) % width;
       final p = index & 0x03;

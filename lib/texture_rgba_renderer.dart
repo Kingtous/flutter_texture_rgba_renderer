@@ -24,9 +24,9 @@ class TextureRgbaRenderer {
 
   /// Provide the rgba data to the texture.
   Future<bool> onRgba(
-      int key, Uint8List data, int height, int width, int stride_align) {
+      int key, Uint8List data, int height, int width, int row_align_bytes) {
     return TextureRgbaRendererPlatform.instance
-        .onRgba(key, data, height, width, stride_align);
+        .onRgba(key, data, height, width, row_align_bytes);
   }
 
   Future<int> getTexturePtr(int key) {
