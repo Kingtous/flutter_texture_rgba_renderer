@@ -14,7 +14,7 @@ void TextureRgbaRendererPluginCApiRegisterWithRegistrar(
             ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }
 
-void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int width, int height)
+void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int len, int width, int height, int row_align_bytes)
 {
     assert(texture_rgba != nullptr);
     assert(buffer != nullptr);
@@ -25,6 +25,6 @@ void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, 
     }
     
     TextureRgba *rgba = static_cast<TextureRgba *>(texture_rgba);
-    std::vector<uint8_t> data(buffer, buffer + width * height * 4);
+    std::vector<uint8_t> data(buffer, buffer + len);
     rgba->MarkVideoFrameAvailable(data, width, height);
 }

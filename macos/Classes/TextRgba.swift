@@ -44,7 +44,7 @@ import CoreVideo
                     kCVPixelBufferMetalCompatibilityKey: true,
                     kCVPixelBufferOpenGLCompatibilityKey: true,
                     // https://developer.apple.com/forums/thread/712709
-                    kCVPixelBufferBytesPerRowAlignmentKey: row_align_bytes
+                    kCVPixelBufferBytesPerRowAlignmentKey: 64
                 ] as CFDictionary, &pixelBufferCopy)
                 guard result == kCVReturnSuccess else {
                     return nil

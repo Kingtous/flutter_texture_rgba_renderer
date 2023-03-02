@@ -22,7 +22,7 @@ FLUTTER_PLUGIN_EXPORT void texture_rgba_renderer_plugin_register_with_registrar(
     FlPluginRegistrar* registrar);
 
 // Keep the same symbol name with Windows.
-FLUTTER_PLUGIN_EXPORT void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int width, int height);
+FLUTTER_PLUGIN_EXPORT void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int len, int width, int height, int row_align_bytes);
 
 G_END_DECLS
 

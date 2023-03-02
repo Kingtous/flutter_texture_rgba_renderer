@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> {
   final _textureRgbaRendererPlugin = TextureRgbaRenderer();
   int textureId = -1;
   int height = 500;
-  int width = 528;
+  int width = 500;
   int cnt = 0;
   var key = 0;
   int texturePtr = 0;
@@ -59,13 +59,16 @@ class _MyAppState extends State<MyApp> {
   void start(int methodId) {
     debugPrint("start mockPic");
     method = methodId;
+    final rowBytes = (width * 4 + rowAlignBytes - 1) & (~(rowAlignBytes - 1));
+    debugPrint('REMOVE ME ======================= rowBytes $rowBytes');
+    final picDataLength = rowBytes * height;
     _timer?.cancel();
     // 60 fps
     _timer =
         Timer.periodic(const Duration(milliseconds: 1000 ~/ 60), (timer) async {
       if (methodId == 0) {
         // Method.1: with MethodChannel
-        data = mockPicture(width, height, rowAlignBytes);
+        data = mockPicture(width, height, rowBytes, picDataLength);
         final t1 = DateTime.now().microsecondsSinceEpoch;
         final res = await _textureRgbaRendererPlugin.onRgba(
             key, data!, height, width, rowAlignBytes);
@@ -77,11 +80,11 @@ class _MyAppState extends State<MyApp> {
           debugPrint("WARN: render failed");
         }
       } else {
-        final dataPtr = mockPicturePtr(width, height, rowAlignBytes);
+        final dataPtr = mockPicturePtr(width, height, rowBytes, picDataLength);
         // Method.2: with native ffi
         final t1 = DateTime.now().microsecondsSinceEpoch;
         Native.instance.onRgba(Pointer.fromAddress(texturePtr).cast<Void>(),
-            dataPtr, width, height, rowAlignBytes);
+            dataPtr, picDataLength, width, height, rowAlignBytes);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -100,30 +103,27 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  Uint8List mockPicture(int width, int height, int rowAlignBytes) {
-    final ab1 = rowAlignBytes - 1;
-    final padding = (rowAlignBytes - ((width * 4) & ab1)) & ab1;
-    final rowBytes = width * 4 + padding;
-    final pic = List.generate(rowBytes * height, (index) {
-      final h = (index / 4) / width;
-      final w = (index / 4) % width;
+  Uint8List mockPicture(int width, int height, int rowBytes, int length) {
+    final pic = List.generate(length, (index) {
+      final r = index / rowBytes;
+      final c = (index % rowBytes) / 4;
       final p = index & 0x03;
-      if (h > 20 && h < 30) {
-        if (w > 20 && w < 25) {
+      if (c > 20 && c < 30) {
+        if (r > 20 && r < 25) {
           if (p == 0 || p == 3) {
             return 255;
           } else {
             return 0;
           }
         }
-        if (w > 40 && w < 45) {
+        if (r > 40 && r < 45) {
           if (p == 1 || p == 3) {
             return 255;
           } else {
             return 0;
           }
         }
-        if (w > 60 && w < 65) {
+        if (r > 60 && r < 65) {
           if (p == 2 || p == 3) {
             return 255;
           } else {
@@ -136,16 +136,14 @@ class _MyAppState extends State<MyApp> {
     return Uint8List.fromList(pic);
   }
 
-  Pointer<Uint8> mockPicturePtr(int width, int height, int rowAlignBytes) {
-    final ab1 = rowAlignBytes - 1;
-    final padding = (rowAlignBytes - ((width * 4) & ab1)) & ab1;
-    final rowBytes = width * 4 + padding;
-    final pic = List.generate(rowBytes * height, (index) {
-      final h = (index / 4) / width;
-      final w = (index / 4) % width;
+  Pointer<Uint8> mockPicturePtr(
+      int width, int height, int rowBytes, int length) {
+    final pic = List.generate(length, (index) {
+      final r = index / rowBytes;
+      final c = (index % rowBytes) / 4;
       final p = index & 0x03;
-      final edgeH = (h >= 0 && h < 10) || ((h >= height - 10) && h < height);
-      final edgeW = (w >= 0 && w < 10) || ((w >= width - 10) && w < width);
+      final edgeH = (c >= 0 && c < 10) || ((c >= height - 10) && c < height);
+      final edgeW = (r >= 0 && r < 10) || ((r >= width - 10) && r < width);
       if (edgeH || edgeW) {
         if (p == 0 || p == 3) {
           return 255;

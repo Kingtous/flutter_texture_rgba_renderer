@@ -14,7 +14,7 @@
 
 std::unordered_map<int64_t, TextureRgba *> g_renderer_map;
 
-void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height);
+void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int len, int width, int height);
 struct _TextureRgbaRendererPlugin
 {
   GObject parent_instance;
@@ -71,8 +71,9 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     // auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
     auto width = fl_value_get_int(fl_value_lookup_string(args, "width"));
     auto height = fl_value_get_int(fl_value_lookup_string(args, "height"));
+    auto row_align_bytes = fl_value_get_int(fl_value_lookup_string(args, "row_align_bytes"));
     auto texture_rgba = g_renderer_map[key];
-    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, width, height);
+    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, width, height, row_align_bytes);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(fl_texture_registrar_mark_texture_frame_available(self->texture_registrar, FL_TEXTURE(texture_rgba)))));
   }
@@ -140,15 +141,14 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 
 
 extern "C" {
-   void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int width, int height) {
+   void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int len, int width, int height, int row_align_bytes) {
       TextureRgba* self = TEXTURE_RGBA(texture_rgba_ptr);
       g_mutex_lock(&self->mutex);
       // selfate has registered a texture_id,
       if (self->texture_id != 0 && !g_atomic_int_get(&self->buffer_ready) && !texture_rgba_is_terminate(self)) {
         // copy data to the texture.
-        auto buffer_length = 4 * width * height;
-        auto copied_data = new uint8_t[buffer_length];
-        memcpy(copied_data, buffer, buffer_length); 
+        auto copied_data = new uint8_t[len];
+        memcpy(copied_data, buffer, len); 
         switch_rgba(copied_data, width, height);
         // It's safe to working on a non reading index
         g_atomic_pointer_set(&self->buffer, copied_data);
