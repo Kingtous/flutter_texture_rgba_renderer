@@ -1,9 +1,9 @@
 import 'dart:ffi';
 
-typedef F1 = Void Function(
-    Pointer<Void> ptr, Pointer<Uint8> buffer, Int32 width, Int32 height);
-typedef F1Dart = void Function(
-    Pointer<Void> ptr, Pointer<Uint8> buffer, int width, int height);
+typedef F1 = Void Function(Pointer<Void> ptr, Pointer<Uint8> buffer,
+    Int32 width, Int32 height, Int stride_align);
+typedef F1Dart = void Function(Pointer<Void> ptr, Pointer<Uint8> buffer,
+    int width, int height, int stride_align);
 
 class Native {
   Native._();

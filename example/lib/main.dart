@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> {
   final _textureRgbaRendererPlugin = TextureRgbaRenderer();
   int textureId = -1;
   int height = 500;
-  int width = 500;
+  int width = 528;
   int cnt = 0;
   var key = 0;
   int texturePtr = 0;
@@ -66,8 +66,8 @@ class _MyAppState extends State<MyApp> {
         // Method.1: with MethodChannel
         data = mockPicture(width, height);
         final t1 = DateTime.now().microsecondsSinceEpoch;
-        final res =
-            await _textureRgbaRendererPlugin.onRgba(key, data!, height, width);
+        final res = await _textureRgbaRendererPlugin.onRgba(
+            key, data!, height, width, 16);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -80,7 +80,7 @@ class _MyAppState extends State<MyApp> {
         // Method.2: with native ffi
         final t1 = DateTime.now().microsecondsSinceEpoch;
         Native.instance.onRgba(Pointer.fromAddress(texturePtr).cast<Void>(),
-            dataPtr, width, height);
+            dataPtr, width, height, 16);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -101,14 +101,52 @@ class _MyAppState extends State<MyApp> {
 
   Uint8List mockPicture(int width, int height) {
     final pic = List.generate(width * height * 4, (index) {
-      return random.nextInt(255);
+      final h = (index / 4) / width;
+      final w = (index / 4) % width;
+      final p = index & 0x03;
+      if (h > 20 && h < 30) {
+        if (w > 20 && w < 25) {
+          if (p == 0 || p == 3) {
+            return 255;
+          } else {
+            return 0;
+          }
+        }
+        if (w > 40 && w < 45) {
+          if (p == 1 || p == 3) {
+            return 255;
+          } else {
+            return 0;
+          }
+        }
+        if (w > 60 && w < 65) {
+          if (p == 2 || p == 3) {
+            return 255;
+          } else {
+            return 0;
+          }
+        }
+      }
+      return 255;
     });
     return Uint8List.fromList(pic);
   }
 
   Pointer<Uint8> mockPicturePtr(int width, int height) {
     final pic = List.generate(width * height * 4, (index) {
-      return random.nextInt(255);
+      final h = (index / 4) / width;
+      final w = (index / 4) % width;
+      final p = index & 0x03;
+      final edgeH = (h >= 0 && h < 10) || ((h >= height - 10) && h < height);
+      final edgeW = (w >= 0 && w < 10) || ((w >= width - 10) && w < width);
+      if (edgeH || edgeW) {
+        if (p == 0 || p == 3) {
+          return 255;
+        } else {
+          return 0;
+        }
+      }
+      return 255;
     });
     final picAddr = malloc.allocate(pic.length).cast<Uint8>();
     final list = picAddr.asTypedList(pic.length);
@@ -124,18 +162,20 @@ class _MyAppState extends State<MyApp> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(child: textureId == -1
-                ? const Offstage()
-                : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: Colors.blue),
-                      // decoration: const BoxDecoration(color: Colors.black),
-                      // width: width.toDouble(),
-                      // height: height.toDouble(),
-                      child: Texture(textureId: textureId)),
-                ),),
+            Expanded(
+              child: textureId == -1
+                  ? const Offstage()
+                  : Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(color: Colors.blue),
+                          // decoration: const BoxDecoration(color: Colors.black),
+                          // width: width.toDouble(),
+                          // height: height.toDouble(),
+                          child: Texture(textureId: textureId)),
+                    ),
+            ),
             Text(
                 "texture id: $textureId, texture memory address: ${texturePtr.toRadixString(16)}"),
             TextButton.icon(
@@ -150,9 +190,7 @@ class _MyAppState extends State<MyApp> {
             ),
             Text(
                 "Current mode: ${method == 0 ? 'Method Channel API' : 'Native API'}"),
-            time != 0
-                ? Text("FPS: ${1000000 ~/ time} fps")
-                : const Offstage()
+            time != 0 ? Text("FPS: ${1000000 ~/ time} fps") : const Offstage()
           ],
         ),
       ),
