@@ -13,10 +13,10 @@ extern "C" {
 #endif
     
 /// Keep the same name with Windows.
-void FlutterRgbaRendererPluginOnRgba(void* texture_rgba_ptr, const uint8_t* buffer, int width, int height) {
+void FlutterRgbaRendererPluginOnRgba(void* texture_rgba_ptr, const uint8_t* buffer, int width, int height, int stride_align) {
     TextRgba* texture_rgba = (__bridge TextRgba *)(texture_rgba_ptr);
-    NSData* data = [NSData dataWithBytesNoCopy:(void*)buffer length:width * height * 4 freeWhenDone:FALSE];
-    [texture_rgba markFrameAvaliableWithData:data width:width height:height];
+    NSData* data = [NSData dataWithBytesNoCopy:(void*)buffer length:((width + stride_align - 1) & ~(stride_align - 1)) * height * 4 freeWhenDone:FALSE];
+    [texture_rgba markFrameAvaliableWithData:data width:width height:height stride_align: stride_align];
 }
 
 #if __cplusplus

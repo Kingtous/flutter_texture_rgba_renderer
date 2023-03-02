@@ -34,7 +34,7 @@ import CoreVideo
     }
     
     
-    @objc public func markFrameAvaliable(data: Data, width: Int, height: Int) -> Bool {
+    @objc public func markFrameAvaliable(data: Data, width: Int, height: Int, stride_align: Int) -> Bool {
         queue.sync {
             self.data = data.withUnsafeBytes { buffer in
                 var pixelBufferCopy: CVPixelBuffer!
@@ -42,7 +42,9 @@ import CoreVideo
                 let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, [
                     kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
                     kCVPixelBufferMetalCompatibilityKey: true,
-                    kCVPixelBufferOpenGLCompatibilityKey: true
+                    kCVPixelBufferOpenGLCompatibilityKey: true,
+                    // https://developer.apple.com/forums/thread/712709
+                    kCVPixelBufferBytesPerRowAlignmentKey: stride_align * 4
                 ] as CFDictionary, &pixelBufferCopy)
                 guard result == kCVReturnSuccess else {
                     return nil
