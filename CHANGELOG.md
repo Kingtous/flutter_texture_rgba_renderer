@@ -1,3 +1,6 @@
+## 0.0.12
+* add `stride_align`.
+
 ## 0.0.11
 * compatible for ubuntu 18.04 toolchain.
 
