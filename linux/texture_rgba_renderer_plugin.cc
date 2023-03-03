@@ -149,7 +149,7 @@ extern "C" {
         // copy data to the texture.
         auto copied_data = new uint8_t[len];
         memcpy(copied_data, buffer, len); 
-        switch_rgba(copied_data, width, height);
+        switch_rgba(copied_data, len, height);
         // It's safe to working on a non reading index
         g_atomic_pointer_set(&self->buffer, copied_data);
         g_atomic_int_set(&self->video_height, height);

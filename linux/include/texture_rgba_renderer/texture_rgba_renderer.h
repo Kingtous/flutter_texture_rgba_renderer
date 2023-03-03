@@ -39,13 +39,18 @@ G_DEFINE_TYPE(TextureRgba, texture_rgba,
   (G_TYPE_CHECK_INSTANCE_CAST((obj), texture_rgba_get_type(), \
                               TextureRgba))
 
-static inline void switch_rgba(uint8_t* pixels, int width, int height) {
+static inline void switch_rgba(uint8_t* pixels, int len, int height) {
     uint8_t temp;
-
-    for (int i = 0; i < width * height; i++) {
-        temp = pixels[4 * i];
-        pixels[4 * i] = pixels[4 * i + 2];
-        pixels[4 * i + 2] = temp;
+    int byes_per_row = len / height;
+    int width = byes_per_row >> 2;
+    for (int i = 0; i < height; ++i) {
+      int row_idx_base = i * byes_per_row;
+      for (int k = 0; k < width; ++k) {
+        int idx = row_idx_base + k * 4;
+        temp = pixels[idx];
+        pixels[idx] = pixels[idx + 2];
+        pixels[idx + 2] = temp;
+      }
     }
 }
 
