@@ -71,9 +71,9 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
     auto width = fl_value_get_int(fl_value_lookup_string(args, "width"));
     auto height = fl_value_get_int(fl_value_lookup_string(args, "height"));
-    auto row_align_bytes = fl_value_get_int(fl_value_lookup_string(args, "row_align_bytes"));
+    auto stride_align = fl_value_get_int(fl_value_lookup_string(args, "stride_align"));
     auto texture_rgba = g_renderer_map[key];
-    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, data_length, width, height, row_align_bytes);
+    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, data_length, width, height, stride_align);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(fl_texture_registrar_mark_texture_frame_available(self->texture_registrar, FL_TEXTURE(texture_rgba)))));
   }
@@ -141,7 +141,7 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 
 
 extern "C" {
-   void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int len, int width, int height, int row_align_bytes) {
+   void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int len, int width, int height, int stride_align) {
       TextureRgba* self = TEXTURE_RGBA(texture_rgba_ptr);
       g_mutex_lock(&self->mutex);
       // selfate has registered a texture_id,

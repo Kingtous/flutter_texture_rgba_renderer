@@ -49,12 +49,12 @@ public class TextureRgbaRendererPlugin: NSObject, FlutterPlugin {
         let data = args["data"] as! FlutterStandardTypedData
         let height = args["height"] as! Int
         let width = args["width"] as! Int
-        let row_align_bytes = args["row_align_bytes"] as! Int
+        let stride_align = args["stride_align"] as! Int
         let textureRgba = renderer[key]
         if (textureRgba == nil) {
             result(false)
         } else {
-            result(textureRgba!.markFrameAvaliable(data: data.data, width: width, height: height, row_align_bytes: row_align_bytes))
+            result(textureRgba!.markFrameAvaliable(data: data.data, width: width, height: height, stride_align: stride_align))
         }
     case "getTexturePtr":
         let args = call.arguments as! Dictionary<String, Any?>
