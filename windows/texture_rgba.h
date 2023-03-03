@@ -18,6 +18,9 @@ public:
 	const FlutterDesktopPixelBuffer* buffer();
 
 private:
+	void switch_rgba(std::vector<uint8_t>& buffer, size_t height);
+
+private:
 	FlutterDesktopPixelBuffer flutter_pixel_buffer_{};
 	flutter::TextureRegistrar* texture_registrar_ = nullptr;
 	std::unique_ptr<flutter::TextureVariant> texture_ = nullptr;
