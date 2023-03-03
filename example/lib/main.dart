@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
@@ -33,7 +34,7 @@ class _MyAppState extends State<MyApp> {
   Timer? _timer;
   int time = 0;
   int method = 0;
-  final rowAlignBytes = 64;
+  final rowAlignBytes = Platform.isMacOS ? 64 : 1;
 
   @override
   void initState() {
@@ -60,7 +61,6 @@ class _MyAppState extends State<MyApp> {
     debugPrint("start mockPic");
     method = methodId;
     final rowBytes = (width * 4 + rowAlignBytes - 1) & (~(rowAlignBytes - 1));
-    debugPrint('REMOVE ME ======================= rowBytes $rowBytes');
     final picDataLength = rowBytes * height;
     _timer?.cancel();
     // 60 fps

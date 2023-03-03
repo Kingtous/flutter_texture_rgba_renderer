@@ -68,12 +68,12 @@ static void texture_rgba_renderer_plugin_handle_method_call(
     auto args = fl_method_call_get_args(method_call);
     auto key = fl_value_get_int(fl_value_lookup_string(args, "key"));
     auto data = fl_value_get_uint8_list(fl_value_lookup_string(args, "data"));
-    // auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
+    auto data_length = fl_value_get_length(fl_value_lookup_string(args, "data"));
     auto width = fl_value_get_int(fl_value_lookup_string(args, "width"));
     auto height = fl_value_get_int(fl_value_lookup_string(args, "height"));
     auto row_align_bytes = fl_value_get_int(fl_value_lookup_string(args, "row_align_bytes"));
     auto texture_rgba = g_renderer_map[key];
-    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, width, height, row_align_bytes);
+    FlutterRgbaRendererPluginOnRgba((void*)texture_rgba, data, data_length, width, height, row_align_bytes);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(fl_texture_registrar_mark_texture_frame_available(self->texture_registrar, FL_TEXTURE(texture_rgba)))));
   }
