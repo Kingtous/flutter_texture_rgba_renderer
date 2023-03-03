@@ -34,7 +34,7 @@ class _MyAppState extends State<MyApp> {
   Timer? _timer;
   int time = 0;
   int method = 0;
-  final rowAlignBytes = Platform.isMacOS ? 64 : 1;
+  final strideAlign = Platform.isMacOS ? 64 : 1;
 
   @override
   void initState() {
@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
   void start(int methodId) {
     debugPrint("start mockPic");
     method = methodId;
-    final rowBytes = (width * 4 + rowAlignBytes - 1) & (~(rowAlignBytes - 1));
+    final rowBytes = (width * 4 + strideAlign - 1) & (~(strideAlign - 1));
     final picDataLength = rowBytes * height;
     _timer?.cancel();
     // 60 fps
@@ -71,7 +71,7 @@ class _MyAppState extends State<MyApp> {
         data = mockPicture(width, height, rowBytes, picDataLength);
         final t1 = DateTime.now().microsecondsSinceEpoch;
         final res = await _textureRgbaRendererPlugin.onRgba(
-            key, data!, height, width, rowAlignBytes);
+            key, data!, height, width, strideAlign);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> {
         // Method.2: with native ffi
         final t1 = DateTime.now().microsecondsSinceEpoch;
         Native.instance.onRgba(Pointer.fromAddress(texturePtr).cast<Void>(),
-            dataPtr, picDataLength, width, height, rowAlignBytes);
+            dataPtr, picDataLength, width, height, strideAlign);
         final t2 = DateTime.now().microsecondsSinceEpoch;
         setState(() {
           time = t2 - t1;
