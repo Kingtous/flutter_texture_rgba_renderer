@@ -37,14 +37,14 @@ class MethodChannelTextureRgbaRenderer extends TextureRgbaRendererPlatform {
   }
 
   @override
-  Future<bool> onRgba(int key, Uint8List data, int height, int width,
-      int row_align_bytes) async {
+  Future<bool> onRgba(
+      int key, Uint8List data, int height, int width, int stride_align) async {
     return await methodChannel.invokeMethod<bool>('onRgba', {
           "data": data,
           "height": height,
           "width": width,
           "key": key,
-          "row_align_bytes": row_align_bytes,
+          "stride_align": stride_align,
         }) ??
         false;
   }

@@ -34,7 +34,7 @@ import CoreVideo
     }
     
     
-    @objc public func markFrameAvaliable(data: Data, width: Int, height: Int, row_align_bytes: Int) -> Bool {
+    @objc public func markFrameAvaliable(data: Data, width: Int, height: Int, stride_align: Int) -> Bool {
         queue.sync {
             self.data = data.withUnsafeBytes { buffer in
                 var pixelBufferCopy: CVPixelBuffer!

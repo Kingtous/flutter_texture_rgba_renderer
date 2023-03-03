@@ -14,7 +14,7 @@ void TextureRgbaRendererPluginCApiRegisterWithRegistrar(
             ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }
 
-void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int len, int width, int height, int row_align_bytes)
+void FlutterRgbaRendererPluginOnRgba(void *texture_rgba, const uint8_t *buffer, int len, int width, int height, int stride_align)
 {
     assert(texture_rgba != nullptr);
     assert(buffer != nullptr);

@@ -118,7 +118,7 @@ class TextureRgbaRenderer {
 Note that the `onRgba` function is not called immediately. It depends on the execution scheduler of Flutter. To solve the problem, the plugin provide the low level function on all 3 pc platforms, which can make them be executed immediately.
 
 ```c
-void FlutterRgbaRendererPluginOnRgba(void* texture_rgba_ptr, const uint8_t* buffer, int len, int width, int height, int row_align_bytes)
+void FlutterRgbaRendererPluginOnRgba(void* texture_rgba_ptr, const uint8_t* buffer, int len, int width, int height, int stride_align)
 ```
 
 You could use the native API in other programing languages. A dart quick example:
@@ -126,9 +126,9 @@ You could use the native API in other programing languages. A dart quick example
 ```dart
 /// The `Native` class is bundled in this plugin.
 typedef F1 = Void Function(Pointer<Void> ptr, Pointer<Uint8> buffer, Int len,
-    Int32 width, Int32 height, Int row_align_bytes);
+    Int32 width, Int32 height, Int stride_align);
 typedef F1Dart = void Function(Pointer<Void> ptr, Pointer<Uint8> buffer,
-    int len, int width, int height, int row_align_bytes);
+    int len, int width, int height, int stride_align);
 
 class Native {
   Native._();
