@@ -24,8 +24,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _textureRgbaRendererPlugin = TextureRgbaRenderer();
   int textureId = -1;
-  int height = 500;
-  int width = 500;
+  int height = 768;
+  int width = 1377;
   int cnt = 0;
   var key = 0;
   int texturePtr = 0;
@@ -62,6 +62,7 @@ class _MyAppState extends State<MyApp> {
     method = methodId;
     final rowBytes = (width * 4 + strideAlign - 1) & (~(strideAlign - 1));
     final picDataLength = rowBytes * height;
+    debugPrint('REMOVE ME =============================== rowBytes $rowBytes');
     _timer?.cancel();
     // 60 fps
     _timer =
@@ -142,8 +143,8 @@ class _MyAppState extends State<MyApp> {
       final r = index / rowBytes;
       final c = (index % rowBytes) / 4;
       final p = index & 0x03;
-      final edgeH = (c >= 0 && c < 10) || ((c >= height - 10) && c < height);
-      final edgeW = (r >= 0 && r < 10) || ((r >= width - 10) && r < width);
+      final edgeH = (c >= 0 && c < 10) || ((c >= width - 10) && c < width);
+      final edgeW = (r >= 0 && r < 10) || ((r >= height - 10) && r < height);
       if (edgeH || edgeW) {
         if (p == 0 || p == 3) {
           return 255;

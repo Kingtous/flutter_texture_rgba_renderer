@@ -32,38 +32,52 @@ import CoreVideo
             return Unmanaged.passRetained(data!)
         }
     }
+
+    private func _markFrameAvaliable(buffer: UnsafePointer<UInt8>, len: Int, width: Int, height: Int, stride_align: Int) -> Bool {
+        var pixelBufferCopy: CVPixelBuffer?
+        // macOS only support 32BGRA currently.
+        let dict: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferMetalCompatibilityKey as String: true,
+            kCVPixelBufferOpenGLCompatibilityKey as String: true,
+            // https://developer.apple.com/forums/thread/712709
+            kCVPixelBufferBytesPerRowAlignmentKey as String: 64
+        ]
+        let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, dict as CFDictionary, &pixelBufferCopy)
+        guard result == kCVReturnSuccess else {
+            return false
+        }
+
+        CVPixelBufferLockBaseAddress(pixelBufferCopy!, [])
+        let ptr = CVPixelBufferGetBaseAddress(pixelBufferCopy!)!
+        memcpy(ptr, buffer, len)
+        CVPixelBufferUnlockBaseAddress(pixelBufferCopy!, [])
+        self.data = pixelBufferCopy
+        self.width = width
+        self.height = height
+        if textureId != -1 && self.data != nil {
+            registry?.textureFrameAvailable(textureId)
+            return true
+        } else {
+            return false
+        }
+    }
+
+    @objc public func markFrameAvaliableRaw(buffer: UnsafePointer<UInt8>, len: Int, width: Int, height: Int, stride_align: Int) -> Bool {
+        queue.sync {
+            _markFrameAvaliable(buffer: buffer, len: len, width: width, height: height, stride_align: stride_align)
+        }
+    }
     
     
     @objc public func markFrameAvaliable(data: Data, width: Int, height: Int, stride_align: Int) -> Bool {
-        queue.sync {
-            self.data = data.withUnsafeBytes { buffer in
-                var pixelBufferCopy: CVPixelBuffer!
-                // macOS only support 32BGRA currently.
-                let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, [
-                    kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
-                    kCVPixelBufferMetalCompatibilityKey: true,
-                    kCVPixelBufferOpenGLCompatibilityKey: true,
-                    // https://developer.apple.com/forums/thread/712709
-                    kCVPixelBufferBytesPerRowAlignmentKey: 64
-                ] as CFDictionary, &pixelBufferCopy)
-                guard result == kCVReturnSuccess else {
-                    return nil
-                }
-                CVPixelBufferLockBaseAddress(pixelBufferCopy, [])
-                let source = buffer.baseAddress!
-                let ptr = CVPixelBufferGetBaseAddress(pixelBufferCopy!)!
-                memcpy(ptr, source, data.count)
-                CVPixelBufferUnlockBaseAddress(pixelBufferCopy, [])
-                return pixelBufferCopy
-            }
-            self.width = width
-            self.height = height
-            if (textureId != -1 && self.data != nil) {
-                registry?.textureFrameAvailable(textureId)
-                return true
-            } else {
-                return false
-            }
+        data.withUnsafeBytes { buffer in
+            markFrameAvaliableRaw(
+                buffer: buffer.baseAddress!.assumingMemoryBound(to: UInt8.self),
+                len: data.count,
+                width: width,
+                height: height,
+                stride_align: stride_align)
         }
     }
 }
