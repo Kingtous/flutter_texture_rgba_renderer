@@ -18,9 +18,10 @@ class MockTextureRgbaRendererPlatform
   Future<int> createTexture(int key) => Future.value(1);
 
   @override
-  Future<bool> onRgba(int key, Uint8List data, int height, int width, int strideAlign) =>
+  Future<bool> onRgba(
+          int key, Uint8List data, int height, int width, int strideAlign) =>
       Future.value(true);
-      
+
   @override
   Future<int> getTexturePtr(int key) {
     return Future.value(0);

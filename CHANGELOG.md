@@ -1,3 +1,6 @@
+## 0.0.13
+* try to fix the memory leak on macOS.
+
 ## 0.0.12
 * add `stride_align`.
 
