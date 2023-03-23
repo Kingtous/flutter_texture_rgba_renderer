@@ -1,3 +1,9 @@
+## 0.0.15
+* opt: add the parameter check for len,width,height on Linux. 
+
+## 0.0.14
+* fix: remove the `copy_pixels` function pointer initialization in texture rgba class.
+
 ## 0.0.13
 * try to fix the memory leak on macOS.
 

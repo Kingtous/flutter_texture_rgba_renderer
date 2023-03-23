@@ -154,7 +154,7 @@ static TextureRgba *texture_rgba_new(FlTextureRegistrar* registrar)
 
 static void texture_rgba_class_init(TextureRgbaClass *klass)
 {
-  // FL_PIXEL_BUFFER_TEXTURE_GET_CLASS(klass)->copy_pixels = texture_rgba_copy_pixels;
+  FL_PIXEL_BUFFER_TEXTURE_CLASS(klass)->copy_pixels = texture_rgba_copy_pixels;
 }
 
 static void texture_rgba_init(TextureRgba* self) {
