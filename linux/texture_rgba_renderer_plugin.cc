@@ -143,8 +143,8 @@ void texture_rgba_renderer_plugin_register_with_registrar(FlPluginRegistrar *reg
 extern "C" {
    void FlutterRgbaRendererPluginOnRgba(void *texture_rgba_ptr, const uint8_t *buffer, int len, int width, int height, int stride_align) {
       // Check whether the parameter is valid.
-      if (len != 4 * width * height || width == 0 || height == 0) {
-        g_warning("The data length, width, height is not valid, ignoring this request.");
+      if (width == 0 || height == 0) {
+        g_warning("The width, height is not valid, ignoring this request.");
         return;
       }
       TextureRgba* self = TEXTURE_RGBA(texture_rgba_ptr);
