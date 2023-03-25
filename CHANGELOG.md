@@ -1,3 +1,6 @@
+## 0.0.16
+* opt: remove unneeded len check on Linux.
+
 ## 0.0.15
 * opt: add the parameter check for len,width,height on Linux. 
 
