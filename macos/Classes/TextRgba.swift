@@ -16,14 +16,22 @@ import CoreVideo
     private var width: Int = 0
     private var height: Int = 0
     private let queue = DispatchQueue(label: "text_rgba_sync_queue")
-    
+    // macOS only support 32BGRA currently.
+    private let dict: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferMetalCompatibilityKey as String: true,
+            kCVPixelBufferOpenGLCompatibilityKey as String: true,
+            // https://developer.apple.com/forums/thread/712709
+            kCVPixelBufferBytesPerRowAlignmentKey as String: 64
+        ]
+
     public static func new(registry: FlutterTextureRegistry?) -> TextRgba {
         let textRgba = TextRgba()
         textRgba.registry = registry
         textRgba.textureId = registry?.register(textRgba) ?? -1
         return textRgba
     }
-    
+
     public func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
         queue.sync {
             if (data == nil) {
@@ -35,14 +43,6 @@ import CoreVideo
 
     private func _markFrameAvaliable(buffer: UnsafePointer<UInt8>, len: Int, width: Int, height: Int, stride_align: Int) -> Bool {
         var pixelBufferCopy: CVPixelBuffer?
-        // macOS only support 32BGRA currently.
-        let dict: [String: Any] = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferMetalCompatibilityKey as String: true,
-            kCVPixelBufferOpenGLCompatibilityKey as String: true,
-            // https://developer.apple.com/forums/thread/712709
-            kCVPixelBufferBytesPerRowAlignmentKey as String: 64
-        ]
         let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, dict as CFDictionary, &pixelBufferCopy)
         guard result == kCVReturnSuccess else {
             return false
@@ -68,8 +68,8 @@ import CoreVideo
             _markFrameAvaliable(buffer: buffer, len: len, width: width, height: height, stride_align: stride_align)
         }
     }
-    
-    
+
+
     @objc public func markFrameAvaliable(data: Data, width: Int, height: Int, stride_align: Int) -> Bool {
         data.withUnsafeBytes { buffer in
             markFrameAvaliableRaw(
@@ -81,5 +81,3 @@ import CoreVideo
         }
     }
 }
-
-
