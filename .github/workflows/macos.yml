@@ -1,0 +1,79 @@
+name: macOS plugin CI
+
+on:
+  push:
+    branches: [master, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: Flutter ${{ matrix.flutter }} / ${{ matrix.manager }}
+    runs-on: macos-15
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        flutter: ['3.41.0', '3.50.0']
+        manager: [swiftpm, cocoapods]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.flutter }}
+          cache: true
+      - name: Check toolchain and package manifests
+        run: |
+          flutter --version
+          xcodebuild -version
+          pod --version
+          ruby -c macos/texture_rgba_renderer.podspec
+          swift package --package-path macos/texture_rgba_renderer dump-package
+      - name: Select dependency manager
+        run: |
+          if [[ '${{ matrix.manager }}' == swiftpm ]]; then
+            flutter config --enable-swift-package-manager
+          else
+            flutter config --no-enable-swift-package-manager
+          fi
+      - name: Dart analysis and unit tests
+        run: |
+          flutter pub get
+          # Existing example lints are informational; analyzer errors still fail CI.
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          flutter test
+      - name: Build macOS example in debug
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter build macos --debug
+      - name: Verify selected integration
+        working-directory: example
+        run: |
+          if [[ '${{ matrix.manager }}' == swiftpm ]]; then
+            manifest=$(find macos/Flutter/ephemeral -path '*/FlutterGeneratedPluginSwiftPackage/Package.swift' -print -quit)
+            test -n "$manifest"
+            grep -F 'texture-rgba-renderer' "$manifest"
+          else
+            grep -F '  - texture_rgba_renderer (' macos/Podfile.lock
+          fi
+      - name: Exercise native plugin in debug
+        working-directory: example
+        run: flutter test integration_test/plugin_integration_test.dart -d macos
+      - name: Build macOS example in release
+        working-directory: example
+        run: flutter build macos --release
+      - name: Exercise native plugin in release
+        working-directory: example
+        run: flutter test integration_test/plugin_integration_test.dart -d macos --release
