@@ -21,6 +21,21 @@ The plugin aims to provide opengl impl for the texture, which bring a better per
 
 Note: Please use the `BGRA` format for ALL platforms.
 
+## macOS dependency managers
+
+Requires Flutter 3.41 or later, Dart 3.11 or later, and macOS 10.15 or later.
+The macOS plugin supports both Swift Package Manager and CocoaPods using the
+same Swift sources. Flutter discovers the package automatically; no manual
+Xcode package dependency is needed. Flutter 3.44 and later enable Swift Package
+Manager by default. On Flutter 3.41–3.43, enable it with:
+
+```sh
+flutter config --enable-swift-package-manager
+```
+
+See [macOS validation steps](doc/macos-validation.md) and
+[Flutter's plugin migration guidance](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-plugin-authors).
+
 ## Getting Started
 
 ### Create a texture by calling `createTexture`.
