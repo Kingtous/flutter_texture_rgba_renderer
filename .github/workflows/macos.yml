@@ -16,7 +16,7 @@ concurrency:
 jobs:
   macos:
     name: Flutter ${{ matrix.flutter }} / ${{ matrix.manager }}
-    runs-on: macos-15
+    runs-on: macos-15-intel
     timeout-minutes: 35
     strategy:
       fail-fast: false
