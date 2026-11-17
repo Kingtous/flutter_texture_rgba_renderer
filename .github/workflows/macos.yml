@@ -2,7 +2,7 @@ name: macOS plugin CI
 
 on:
   push:
-    branches: [master, 'codex/**']
+    branches: [master]
   pull_request:
   workflow_dispatch:
 
@@ -76,4 +76,8 @@ jobs:
         run: flutter build macos --release
       - name: Exercise native plugin in release
         working-directory: example
-        run: flutter test integration_test/plugin_integration_test.dart -d macos --release
+        run: |
+          # Desktop Flutter Driver requires a VM service and cannot run release builds.
+          # Run a standalone AOT smoke app and use its process exit status instead.
+          flutter build macos --release --target=integration_test/release_smoke.dart
+          python3 -c "import subprocess; subprocess.run(['build/macos/Build/Products/Release/texture_rgba_renderer_example.app/Contents/MacOS/texture_rgba_renderer_example'], check=True, timeout=90)"

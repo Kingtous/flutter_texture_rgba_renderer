@@ -61,15 +61,25 @@ flutter test integration_test/plugin_integration_test.dart -d macos
 
 The test creates a texture, uploads through the method channel, looks up the
 exported C symbol through `DynamicLibrary.process()`, invokes its ABI, and closes
-the texture. Also run it with `--release` under SwiftPM to check that release
-linking preserves the FFI entry point.
+the texture. The standalone release smoke app checks that release linking preserves the FFI entry point.
 
 ## GitHub Actions
 
 The `macOS plugin CI` workflow runs on macOS for Flutter 3.41.0 and 3.50.0,
 using both Swift Package Manager and CocoaPods. Every matrix job checks package
 manifest syntax, runs Dart analysis and unit tests, builds the example in debug
-and release, and runs the native integration test in both build modes. Analyzer
+and release, runs the debug native integration test, and executes a standalone release smoke app. Analyzer
 errors fail CI; existing informational lints and warnings do not block it.
 The workflow also verifies that the selected dependency manager includes this
 plugin, so a successful fallback build cannot masquerade as SwiftPM coverage.
+
+Flutter's desktop test/driver commands cannot run in release mode because they
+require the VM service. The CI workflow instead builds and launches
+`integration_test/release_smoke.dart`, which shares native checks with the debug
+integration test and exits with a nonzero status on failure. Run it locally with:
+
+```sh
+cd example
+flutter build macos --release --target=integration_test/release_smoke.dart
+python3 -c "import subprocess; subprocess.run(['build/macos/Build/Products/Release/texture_rgba_renderer_example.app/Contents/MacOS/texture_rgba_renderer_example'], check=True, timeout=90)"
+```
